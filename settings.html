@@ -1,0 +1,24 @@
+<html><head
+<title>Settings Page</title>
+<link rel="stylesheet" type="text/css" href="Style">
+</head>
+<body>
+<script src="JSTest"></script>
+<p>This is the settings page that will eventually be used to support some type of settings.</p>
+<button type="button" onclick="test()">Test JS</button>
+<p id="demo">JavaScript not available</p>
+<button type="button" onclick="loadCounter()">How many transactions?</button>
+<p id="count">Transaction count goes here</p>
+<button type="button" onclick="animate()">Animate</button>
+<img id="temp1" src="/Thermometer?min=100&max=350&value=250" alt="Thermometer example"></img>
+<img id="temp2" src="/Thermometer" alt="Thermometer example"></img>
+<img id="dial1" src="/Dial?min=100&max=200&value=150" alt="Dial example"></img>
+<p>Value for first thermometer: <input type="number" id="t1" onchange="setT1()"></input></p>
+<p>Value for second thermometer: <input type="number" id="t2" onchange="setT2()"></input></p>
+<p>Value for dial: <input type="number" id="d1" onchange="setD1()"></input></p>
+<hr/>
+<p>Enter a number: <input type="number" id="num1" name="num1" onchange="calculate()"></input></p>
+<p>Enter another number: <input type="number" id="num2" name="num2" onchange="calculate()"></input></p>
+<p>The total is: <input type="number" id="num3" name="num3" disabled></input></p>
+<hr/>
+<p>Go <a href="/">back</a> to the main page.</p>

@@ -1,0 +1,39 @@
+#
+# Configuration file for Ada web server
+#
+# HTML pages
+#
+/ index.html text/html
+/Main index.html text/html
+/Settings settings.html text/html
+/Form form.html text/html
+#
+# Internal pages
+#
+/Config configure internal
+/Form_Target target internal
+/Thermometer thermometer internal
+/Dial dial internal
+#
+# Plain text
+#
+/list config.txt text/plain
+#
+# JavaScript
+#
+/JSTest test1.js application/javascript
+#
+# Images
+#
+/Thermo thermometer.svg image/svg+xml
+#
+# XML stuff
+#
+/xml/Counter counter internal
+#
+# Style sheet for pages.
+#
+/Style table.css text/css
+#
+# Some comments at the end of the file.
+#
