@@ -52,7 +52,7 @@ package body svg is
    procedure thermometer(s : GNAT.Sockets.Stream_Access; min : Float; max : Float; value : Float) is
       start : Integer;
       scale : Float := 250.0 / (max - min);
-      height : Integer := Integer(value*scale - min);
+      height : Integer := Integer((value - min)*scale);
    begin
       http.ok(s, "image/svg+xml");
       String'Write(s, "<?xml version=""1.0"" encoding=""UTF-8"" standalone=""no""?>" & CRLF);
