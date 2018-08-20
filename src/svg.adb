@@ -51,7 +51,7 @@ package body svg is
    --
    procedure thermometer(s : GNAT.Sockets.Stream_Access; min : Float; max : Float; value : Float) is
       start : Integer;
-      scale : Float := (max - min) / 250.0;
+      scale : Float := 250.0 / (max - min);
       height : Integer := Integer(value*scale - min);
    begin
       http.ok(s, "image/svg+xml");
@@ -74,7 +74,7 @@ package body svg is
          String'Write(s, "<text x=""72"" y=""" &
                         Ada.Strings.Fixed.Trim(Integer'Image(283 - i*25), Ada.Strings.Left) &
                         """ fill=""black"" font-size=""14"" stroke-width=""1"">" &
-                        Integer'Image(Integer(min + Float(i)*(max-min)/(scale*10.0))) & "</text>" & CRLF);
+                        Integer'Image(Integer(min + Float(i)*(max-min)/10.0)) & "</text>" & CRLF);
       end loop;
       --
       -- White fill
