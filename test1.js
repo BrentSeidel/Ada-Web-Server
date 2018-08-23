@@ -58,8 +58,7 @@ var therm_timer;
 function animate()
 {
   therm_value = 0;
-  therm_timer = window.setInterval(update_therm_up, 25
-  0);
+  therm_timer = window.setInterval(update_therm_up, 250);
 }
 //
 // Counts up and updates a couple images on each count.

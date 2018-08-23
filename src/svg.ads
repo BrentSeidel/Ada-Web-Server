@@ -24,13 +24,6 @@ package svg is
    --
    procedure thermometer(s : GNAT.Sockets.Stream_Access; p : web_common.params.Map);
    --
-   -- Display a thermometer type graphic.  The value is clipped to be between
-   -- the min and max.  The range between min and max is divided into 10
-   -- labeled ranges.  There is no fancy fiddling to adjust the min and max to
-   -- make nice ranges display.  That is the job of the calling software.
-   --
-   procedure thermometer(s : GNAT.Sockets.Stream_Access; min : Float; max : Float; value : Float);
-   --
    -- Display a round dial with a pointer to the appropriate value. The following
    -- parameters are supported:
    -- min - The minimum displayed value
@@ -44,4 +37,21 @@ package svg is
 
 private
    CRLF : String renames web_common.CRLF;
+   --
+   -- Send the standard SVG header.
+   --
+   procedure svg_header(s : GNAT.Sockets.Stream_Access; width : Integer; height : Integer);
+   --
+   -- Display a thermometer type graphic.  The value is clipped to be between
+   -- the min and max.  The range between min and max is divided into 10
+   -- labeled ranges.  There is no fancy fiddling to adjust the min and max to
+   -- make nice ranges display.  That is the job of the calling software.
+   --
+   procedure thermometer(s : GNAT.Sockets.Stream_Access; min : Float; max : Float; value : Float);
+   --
+   -- Display a red X for replacing instruments when an error occurs.  This is
+   -- called locally from some other function that decides when the error has
+   -- occured.
+   --
+   procedure red_x(s : GNAT.Sockets.Stream_Access; width : Integer; height : Integer);
 end;
