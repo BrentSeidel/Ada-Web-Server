@@ -6,7 +6,7 @@ package body internal is
    procedure xml_count(s : GNAT.Sockets.Stream_Access) is
    begin
       http.ok(s, "application/xml");
-      String'Write(s, "<xml><counter>" & Integer'Image(web_common.counter) &
+      String'Write(s, "<xml><counter>" & Integer'Image(web_common.task_counter.read) &
                      "</counter></xml>" & CRLF);
    end;
 
@@ -55,6 +55,17 @@ package body internal is
          web_common.params.Next(index);
       end loop;
       String'Write(s, "</table>" & CRLF);
+      html.html_end(s, "footer.html");
+   end;
+   --
+   -- Request that the configuration file be reloaded.
+   --
+   procedure html_reload_config(s : GNAT.Sockets.Stream_Access) is
+   begin
+      http.ok(s, "text/html");
+      html.html_head(s, "Reload Requested", "Style");
+      String'Write(s, "<h1>Reload Request</h1>");
+      String'Write(s, "<p>Configuration file reload request submitted.</p>" & CRLF);
       html.html_end(s, "footer.html");
    end;
 

@@ -14,6 +14,7 @@
 /Form_Target target internal
 /Thermometer thermometer internal
 /Dial dial internal
+/ConfigReload reload internal
 #
 # Plain text
 #

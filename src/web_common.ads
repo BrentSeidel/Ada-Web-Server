@@ -40,7 +40,8 @@ package web_common is
       Hash => Ada.Strings.Hash_Case_Insensitive,
       Equivalent_Keys => Ada.Strings.Equal_Case_Insensitive);
    --
-   -- Procedure to load the directory from a file.
+   -- Procedure to load the directory from a file.  Clears the directory map and
+   -- then reads data from a file to load the directory.
    --
    procedure load_directory(name : String);
    --
@@ -61,4 +62,22 @@ package web_common is
    -- A counter to provide some data to send to the client.
    --
    counter : Integer := 0;
+   --
+   -- A protected type for maintianing a counter of active request_handler
+   -- tasks.
+   --
+   protected type protected_counter is
+      procedure increment;
+      procedure decrement;
+      function read return Integer;
+   private
+      value : integer := 0;
+   end protected_counter;
+   --
+   -- A counter to keep track of how many request_handler tasks are active.  The
+   -- value should be a low positive number.  If it goes negative, a problem has
+   -- occured.  If the value tends to increase, it means that the handler tasks
+   -- are not terminating.
+   --
+   task_counter : protected_counter;
 end;

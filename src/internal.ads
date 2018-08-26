@@ -27,6 +27,10 @@ package internal is
    -- Display information sent in a form
    --
    procedure target(s : GNAT.Sockets.Stream_Access; p : web_common.params.Map);
+   --
+   -- Request that the configuration file be reloaded.
+   --
+   procedure html_reload_config(s : GNAT.Sockets.Stream_Access);
 
 private
    CRLF : String renames web_common.CRLF;

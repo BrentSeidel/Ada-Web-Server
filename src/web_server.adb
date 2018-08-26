@@ -1,5 +1,4 @@
 package body web_server is
-
    --
    -- This is the web server.  In initializes the network interface and enters
    -- an infinite loop processing requests.
@@ -33,6 +32,10 @@ package body web_server is
       --
       GNAT.Sockets.Listen_Socket(server);
       loop
+         if (reload_configuration) then
+            web_common.load_directory("config.txt");
+            reload_configuration := False;
+         end if;
          GNAT.Sockets.Accept_Socket(server, socket, local);
          web_common.counter := web_common.counter + 1;
          --
@@ -70,6 +73,7 @@ package body web_server is
       accept start(socket : GNAT.Sockets.Socket_Type) do
          sock := socket;
       end start;
+      web_common.task_counter.increment;
       s := GNAT.Sockets.Stream(sock);
       --
       -- First read the HTTP headers.  These will need to be parsed to
@@ -163,6 +167,7 @@ package body web_server is
       -- Close the session socket
       --
       GNAT.Sockets.Close_Socket(sock);
+      web_common.task_counter.decrement;
    end;
    --
    -- Simple procedure to decode internally generated pages.  It's used by both
@@ -186,6 +191,8 @@ package body web_server is
          svg.thermometer(s, p);
       elsif (name = "dial") then
          svg.dial(s, p);
+      elsif (name = "reload") then
+         internal.html_reload_config(s);
       else
          http.not_implemented_int(s, name);
       end if;
