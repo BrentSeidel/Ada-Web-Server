@@ -1,3 +1,5 @@
+with Ada.Characters.Latin_1;
+with Ada.Text_IO;
 package body http is
 
    --
@@ -228,9 +230,9 @@ package body http is
             --
             index := Ada.Strings.Unbounded.Index(temp, "=");
             declare
-               key : String := Ada.Strings.Unbounded.To_String(
+               key : constant String := Ada.Strings.Unbounded.To_String(
                                                      Ada.Strings.Unbounded.Head(temp, index - 1));
-               value : String := web_common.url_decode(Ada.Strings.Unbounded.To_String(
+               value : constant String := web_common.url_decode(Ada.Strings.Unbounded.To_String(
                                                        Ada.Strings.Unbounded.Tail(temp,
                                                           Ada.Strings.Unbounded.Length(temp) - index)));
             begin

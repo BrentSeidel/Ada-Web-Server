@@ -1,3 +1,6 @@
+with Ada.Text_IO;
+with Ada.Text_IO.Unbounded_IO;
+with http;
 package body text is
 
    --

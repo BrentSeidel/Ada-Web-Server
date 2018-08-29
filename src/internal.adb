@@ -1,3 +1,5 @@
+with http;
+with html;
 package body internal is
 
    --

@@ -1,14 +1,7 @@
-with Ada.Characters.Latin_1;
-with Ada.Streams;
-with Ada.Streams.Stream_IO;
 with Ada.Strings;
-with Ada.Strings.Hash_Case_Insensitive;
-with Ada.Strings.Equal_Case_Insensitive;
 with Ada.Strings.Unbounded;
 use type Ada.Strings.Unbounded.Unbounded_String;
-with Ada.Text_IO;
 with GNAT.Sockets;
-with Ada.Containers.Indefinite_Hashed_Maps;
 with web_common;
 
 package http is

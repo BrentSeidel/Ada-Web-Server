@@ -1,14 +1,7 @@
-with Ada.Streams;
 With Ada.Strings;
-with Ada.Strings.Fixed;
 with Ada.Strings.Unbounded;
 use type Ada.Strings.Unbounded.Unbounded_String;
-with Ada.Text_IO;
-with Ada.Text_IO.Unbounded_IO;
 with GNAT.Sockets;
-with http;
-with html;
-with svg;
 with web_common;
 --
 -- This package contains the various internal routines to generate pages, data.

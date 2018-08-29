@@ -1,3 +1,5 @@
+with Ada.Strings.Fixed;
+with http;
 package body svg is
 
    --
@@ -59,8 +61,8 @@ package body svg is
    --
    procedure thermometer(s : GNAT.Sockets.Stream_Access; min : Float; max : Float; value : Float) is
       start : Integer;
-      scale : Float := 250.0 / (max - min);
-      height : Integer := Integer((value - min)*scale);
+      scale : constant Float := 250.0 / (max - min);
+      height : constant Integer := Integer((value - min)*scale);
    begin
       svg_header(s, 100, 350);
       --
@@ -114,7 +116,6 @@ package body svg is
       value : Integer;
       max : Integer := 250;
       min : Integer := 0;
-      scale : Float;
       angle : Integer;
       error : Boolean := false;
    begin
@@ -156,7 +157,6 @@ package body svg is
       if (error) then
          red_x(s, 300, 300);
       else
-         scale := Float(max - min) /270.0;
          --
          -- Send headers
          --

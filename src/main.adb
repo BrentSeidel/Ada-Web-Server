@@ -1,5 +1,4 @@
 with web_server;
-with Ada.Text_IO;
 
 procedure Main is
 

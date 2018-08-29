@@ -5,8 +5,6 @@ with Ada.Strings.Equal_Case_Insensitive;
 with Ada.Strings.Hash_Case_Insensitive;
 with Ada.Strings.Unbounded;
 use type Ada.Strings.Unbounded.Unbounded_String;
-with Ada.Text_IO;
-with Ada.Text_IO.Unbounded_IO;
 with GNAT.Sockets;
 --
 -- This package contains assorted common constants and data for the web server.

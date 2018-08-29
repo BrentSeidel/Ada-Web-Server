@@ -1,10 +1,10 @@
 With Ada.Strings;
-with Ada.Strings.Fixed;
+--with Ada.Strings.Fixed;
 with Ada.Strings.Unbounded;
 use type Ada.Strings.Unbounded.Unbounded_String;
-with Ada.Text_IO;
+--with Ada.Text_IO;
 with GNAT.Sockets;
-with http;
+--with http;
 with web_common;
 --
 -- This package contains an assorment of SVG widgets that can be used by

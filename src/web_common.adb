@@ -1,3 +1,5 @@
+with Ada.Text_IO;
+with Ada.Text_IO.Unbounded_IO;
 package body web_common is
 
    --

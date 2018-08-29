@@ -1,3 +1,4 @@
+with http;
 package body binary is
 
    --
