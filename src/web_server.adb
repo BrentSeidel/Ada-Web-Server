@@ -36,9 +36,9 @@ package body web_server is
       --
       GNAT.Sockets.Listen_Socket(sock1);
       loop
-         if (reload_configuration) then
+         if (web_common.reload_configuration) then
             web_common.load_directory("config.txt");
-            reload_configuration := False;
+            web_common.reload_configuration := False;
          end if;
          GNAT.Sockets.Accept_Socket(sock1, socket, local);
          web_common.counter := web_common.counter + 1;

@@ -78,4 +78,9 @@ package web_common is
    -- are not terminating.
    --
    task_counter : protected_counter;
+   --
+   -- Flag to indicate that the configuration file has changed and needs to be
+   -- reloaded.  This would typically be used during development or debugging.
+   --
+   reload_configuration : Boolean := False;
 end;

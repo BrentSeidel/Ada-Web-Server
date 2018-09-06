@@ -27,12 +27,6 @@ package web_server is
       entry start(socket : GNAT.Sockets.Socket_Type);
       entry end_task;
    end request_handler;
---   type handler_ptr is access request_handler;
-   --
-   -- Flag to indicate that the configuration file has changed and needs to be
-   -- reloaded.  This would typically be used during development or debugging.
-   --
-   reload_configuration : Boolean := False;
 
 private
    --
