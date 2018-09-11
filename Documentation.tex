@@ -1,0 +1,134 @@
+%
+% Last Revision: $Rev$
+% Revision date: $Date$
+% Author: $Author$
+%
+\documentclass[10pt, openany, draft]{article}
+
+\usepackage{fancyhdr}
+\usepackage{multind}
+\usepackage{pstricks}
+\usepackage{graphicx}
+\usepackage[yyyymmdd]{datetime}
+\renewcommand{\dateseparator}{-}
+\usepackage{geometry}
+\geometry{letterpaper}
+%
+% Front Matter
+%
+\title{Ada Web Server}
+\author{Brent Seidel \\ Phoenix, AZ}
+\date{ \today }
+%========================================================
+%%% BEGIN DOCUMENT
+\begin{document}
+\maketitle
+\section{Synopsis}
+This Ada web server is a simple server designed to serve a few files and provide and interface to embedded systems.  It is not intended to be a highly flexible high performance server--there are plenty of systems that provide that.
+
+This document describes the configuration of and modifications to the Ada web server.  The amount of customization needed depends on the application.  For some applications, no modifications of the software may be needed.  In other applications, major modifications are needed.
+
+\section{Installation}
+This repository is stand alone and can be installed without any other repositories.  It is built using the GNAT Ada tool set.  The code is written in Ada 2012
+
+\section{Software Structure}
+The software consists of a number of packages, each with a spec and a body.
+
+\subsection{\texttt{main.adb}}
+This is the main routine and it simply starts the web server.  If other initializations are needed, they could be added or called from here.
+
+\subsection{\texttt{web\_common}}
+This package contains a number of items that are available for use in other packages.  Items are put here instead of in \texttt{web\_server} in order to avoid circular dependancies.
+
+\subsection{\texttt{web\_server}}
+This package contains the main web server software.
+
+\subsection{\texttt{html}}
+This package contains routines to support the generation of HTML.  The visible routines are:
+\begin{itemize}
+  \item \verb|html_head(s : GNAT.Sockets.Stream_Access; title : String)|\\
+  Generate a simple HTML heading with the specified title.
+  \item \verb|html_head(s : GNAT.Sockets.Stream_Access; title : String; style : String)|\\
+  Generate a simple HTML heading with the specified title and style sheet.
+  \item \verb|html_end(s : GNAT.Sockets.Stream_Access; name : String)|\\
+  Generate an ending for an HTML item using the file specified in \texttt{name}.
+\end{itemize}
+
+\subsection{\texttt{http}}
+This package contains routines to support HTTP.  The visible routines are:
+\begin{itemize}
+  \item \verb|ok(s : GNAT.Sockets.Stream_Access; txt: String)|\\
+  Return code 200 OK for normal cases.
+  \item \verb|not_found(s : GNAT.Sockets.Stream_Access; item: String)|\\
+  Return code 404 NOT FOUND for when the requested item is not in the directory.
+  \item \verb|internal_error(s : GNAT.Sockets.Stream_Access; file: String)|\\
+  Return code 500 INTERNAL SERVER ERROR generally when unable to open the file for the specified item.  This means an item has been added to \texttt{config.txt} without adding the file to the system.
+  \item \verb|{not_implemented_req(s : GNAT.Sockets.Stream_Access; req: String)|\\
+  Return code 501 NOT IMPLEMENTED for any request other than GET or POST.
+  \item \verb|not_implemented_int(s : GNAT.Sockets.Stream_Access; item: String)|\\
+  Return code 501 NOT IMPLEMENTED for a request for an internally generated item that is not yet implemented.
+  \item \begin{verbatim}read_headers(s : GNAT.Sockets.Stream_Access;
+             method : out request_type;
+             item : out Ada.Strings.Unbounded.Unbounded_String;
+             params : in out web_common.params.Map)
+            \end{verbatim}
+   The \texttt{read\_headers} procedure will need to handle both GET and POST request as well as return the passed parameters.  Returned values will be the requested item and a dictionary containing the parameters.  If there are no parameters, the dictionary will be empty.
+\end{itemize}
+
+\subsection{\texttt{internal}}
+This package contains routines to generate HTML or XML for internally generated items.
+
+\subsection{\texttt{svg}}
+This package contains routines to generate SVG for internally generated items.
+
+\subsection{\texttt{text}}
+This package consists of a spec and body and is used to support the serving of text files.  The visible routines are:
+\begin{itemize}
+  \item \begin{verbatim}send_file_with_headers(s : GNAT.Sockets.Stream_Access;
+                       mime : String; name : String)
+  \end{verbatim}
+  This procedure sends a text file to the client with headers.  The file name is contained in the parameter \texttt{name} and the MIME type of the file is contained in the parameter \texttt{mime}.
+
+  \item \begin{verbatim}send_file_without_headers(s : GNAT.Sockets.Stream_Access;
+                          name : String)
+  \end{verbatim}
+  This procedure sends a text file to the client without headers.  The file name is contained in the parameter \texttt{name}.  No HTTP headers are sent.
+\end{itemize}
+
+\subsection{\texttt{binary}}
+This package consists of a spec and body and is used to support the serving of binary files.  The one visible routine is:
+\begin{itemize}
+  \item \begin{verbatim}send_file_with_headers(s : GNAT.Sockets.Stream_Access;
+                       mime : String; name : String);
+            \end{verbatim}
+  This procedure sends a binary file to the client with headers.  The file name is contained in the parameter \texttt{name} and the MIME type of the file is contained in the parameter \texttt{mime}.
+\end{itemize}
+
+\section{Configuration}
+Generally before being used, the web server needs to be configured.  An example configuration is included and may be modified as needed.
+
+\subsection{Configuration File}
+The primary means of configuration is the config.txt file in the repository root.  This file is used to translate from the URL requested to the actual page served.  Both external files and internally generated responses are supported.
+
+The format of the configuration file is fairly simple.  A line that has a pound sign, ``\#'' (octothorp) as the first character is a comment.  Non comment lines consist of three fields separated by a single space.
+\begin{itemize}
+  \item The first field is the requested URL minus the server specification.  Due to the nature of URLs, the first character will always be a slash, ``/''.  The web server uses a simple dictionary data structure for the URLs so the structure is technically flat.  However, any sort of hierarchical structure can be simulated.
+  \item The second field identifies the item to be served.  It may be a file or it may be an arbitrary string to identify an internally generated item.  Files served are passed unchanged and both text and binary files are supported.
+  \item The third field identifies the MIME type of the file being served.  If the third field is ``\texttt{internal}'', the item being served will be generated internally.  The value of the second field is used to select the proper internal routine to call.
+\end{itemize}
+
+\subsection{Modifying the Software}
+To change the port used by the server, the value of \texttt{web\_common.port} needs to be changed and the software recompiled.  The default value is 31415 and allows this server to exist alongside another web server.  This value is defined in the file \texttt{web\_common.ads}.
+
+To change the number of tasks (threads) available for serving, change the \texttt{num\_handlers} constant in \texttt{web\_server.ads}.  The default value is 10, which should be adequate.  If memory is tight, it can be reduced. If higher performance is needed, this number can be increased.
+
+\section{Modifications}
+To add or change internally generated items, the code will need to be modified and recompiled.  In both cases, the first place to look in the software is the \texttt{decode\_internal} procedure in the \texttt{web\_server.adb} file.
+
+\subsection{Modifications to Existing Items}
+First, identify the routine to modify by looking at the \texttt{decode\_internal} procedure.  Then the appropriate files can be edited and the routine located.  Once the routine is located, any necessary modifications can be made.
+
+\subsection{Adding New Items}
+The very first thing is to decide what you can your item to do.  The existing software has examples of routines that generate HTML, XML, and SVG.  These can be used as models.  These are contained in the \texttt{internal} (for HTML and XML) and \texttt{svg} (for SVG) packages.  If you need to interface with other hardware or software, it will probably be best to add new packages for these interfaces.
+
+\end{document}

@@ -8,3 +8,6 @@
 obj/*
 
 main
+*.log
+*.gz
+*.aux

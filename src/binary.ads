@@ -16,10 +16,6 @@ package binary is
    procedure send_file_with_headers(s : GNAT.Sockets.Stream_Access;
                                     mime : String; name : String);
 
-   --
-   -- This procedure sends a text file to the client with headers.
-   --
-
 private
    CRLF : String renames web_common.CRLF;
 
