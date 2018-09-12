@@ -41,7 +41,7 @@ This is the main routine and it simply starts the web server.  If other initiali
 This package contains a number of items that are available for use in other packages.  Items are put here instead of in \texttt{web\_server} in order to avoid circular dependancies.
 
 \subsection{\texttt{web\_server}}
-This package contains the main web server software.
+This package contains the main web server software.  Since this package calls the user code, any attempt by user code to call items in this package will create a circular dependency.  Items that may be needed by user code should be in \texttt{web\_common}.
 
 \subsection{\texttt{html}}
 This package contains routines to support the generation of HTML.  The visible routines are:
@@ -55,7 +55,7 @@ This package contains routines to support the generation of HTML.  The visible r
 \end{itemize}
 
 \subsection{\texttt{http}}
-This package contains routines to support HTTP.  The visible routines are:
+This package contains routines to support HTTP.  Some of these routines are intended for use by user code and some are not.  The visible routines are:
 \begin{itemize}
   \item \verb|ok(s : GNAT.Sockets.Stream_Access; txt: String)|\\
   Return code 200 OK for normal cases.
@@ -72,14 +72,42 @@ This package contains routines to support HTTP.  The visible routines are:
              item : out Ada.Strings.Unbounded.Unbounded_String;
              params : in out web_common.params.Map)
             \end{verbatim}
-   The \texttt{read\_headers} procedure will need to handle both GET and POST request as well as return the passed parameters.  Returned values will be the requested item and a dictionary containing the parameters.  If there are no parameters, the dictionary will be empty.
+   The \texttt{read\_headers} procedure handles both GET and POST request and returns any passed parameters.  Returned values will be the requested item in \texttt{item} and a dictionary containing the parameters in \texttt{params}.  If there are no parameters, the dictionary will be empty.  This routine is called by the web server to read the headers of the HTTP request.  By the time any user code is called, the headers have already been read.
 \end{itemize}
 
 \subsection{\texttt{internal}}
-This package contains routines to generate HTML or XML for internally generated items.
+This package contains routines to generate HTML or XML for internally generated items.  All routines in this package are not really required and can be changed around as needed.  They do provide some examples of how to generate items.  The internal routines can have access to parameters passed in the GET or POST request.  If no parameters were passed, the dictionary is empty.  The internal routines cannot distinguish between a GET or a POST request.  The visible routines are:
+\begin{itemize}
+  \item \verb|xml_count(s : GNAT.Sockets.Stream_Access)|\\
+  Return the count of transactions as an xml message
+  \item \verb|html_show_config(s : GNAT.Sockets.Stream_Access)|\\
+  Display the configuration data as a table.
+  \item \verb|target(s : GNAT.Sockets.Stream_Access; p : web_common.params.Map)|\\
+  Display information sent in a form
+  \item \verb|html_reload_config(s : GNAT.Sockets.Stream_Access)|\\
+  Request that the configuration file be reloaded.  This can be useful during development and debugging.
+\end{itemize}
 
 \subsection{\texttt{svg}}
-This package contains routines to generate SVG for internally generated items.
+This package contains routines to generate SVG for internally generated items.  The visible routines are:
+\begin{itemize}
+  \item \verb|thermometer(s : GNAT.Sockets.Stream_Access; p : web_common.params.Map)|\\
+  Display a thermometer SVG showing the value parameter.  This procedure handles getting and checking the parameters.  The following parameters are supported:
+  \begin{itemize}
+    \item \texttt{min} -- The minimum displayed value
+    \item \texttt{max} -- The maximum displayed value
+    \item \texttt{value} -- The value to display.
+  \end{itemize}
+  The value is clamped to be between min and max.  It is assumed that min is less than max.  Bad things may happen if it isn't.
+  \item \verb|dial(s : GNAT.Sockets.Stream_Access; p : web_common.params.Map)|\\
+  Display a round dial with a pointer to the appropriate value. The following parameters are supported:
+  \begin{itemize}
+    \item \texttt{min} -- The minimum displayed value
+    \item \texttt{max} -- The maximum displayed value
+    \item \texttt{value} -- The value to display.
+  \end{itemize}
+  The value is clamped to be between min and max.  It is assumed that min is less than max.  Bad things may happen if it isn't.
+\end{itemize}
 
 \subsection{\texttt{text}}
 This package consists of a spec and body and is used to support the serving of text files.  The visible routines are:
