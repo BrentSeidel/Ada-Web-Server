@@ -56,6 +56,7 @@ package web_common is
    directory : dictionary.Map;
    port : constant GNAT.Sockets.Port_Type := 31415;
    CRLF : constant String := Ada.Characters.Latin_1.CR & Ada.Characters.Latin_1.LF;
+   server_header : constant String := "Server: Custom Ada 2012 Server" & CRLF;
    --
    -- A counter to provide some data to send to the client.
    --

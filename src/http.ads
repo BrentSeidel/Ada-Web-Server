@@ -7,9 +7,11 @@ with web_common;
 package http is
 
    --
-   -- Type of request.  GET and POST are supported.  All others will return OTHER.
+   -- Type of request.  OPTIONS, GET, and POST are supported.  All others will
+   -- will return a not_implemented_req() response.
    --
-   type request_type is (GET, POST, Other);
+   type request_type is (CONNECT, DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT,
+                         TRACE, Other);
    --
    -- Return code 200 OK for normal cases
    --
@@ -24,10 +26,6 @@ package http is
    -- file for the specified item.
    --
    procedure internal_error(s : GNAT.Sockets.Stream_Access; file: String);
-   --
-   -- Return code 501 NOT IMPLEMENTED for any request other than GET or POST.
-   --
-   procedure not_implemented_req(s : GNAT.Sockets.Stream_Access; req: String);
    --
    -- Return code 501 NOT IMPLEMENTED for a request for an internally generated
    -- item that is not yet implemented..
@@ -46,6 +44,15 @@ package http is
 
 private
    CRLF : String renames web_common.CRLF;
+   --
+   -- Return code 200 OK for OPTIONS reqest cases
+   --
+   procedure options_ok(s : GNAT.Sockets.Stream_Access);
+   --
+   -- Return code 501 NOT IMPLEMENTED for any unsupported request.  This is
+   -- generated internal to the http package.
+   --
+   procedure not_implemented_req(s : GNAT.Sockets.Stream_Access; req: String);
    --
    -- Read a line from the HTTP request stream
    --

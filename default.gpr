@@ -14,7 +14,7 @@ project Default is
    end Builder;
 
    package Compiler is
-      for Switches ("ada") use ("-gnatVa", "-gnatwa.e", "-g", "-gnato", "-fstack-check", "-gnatf", "-gnat12", "-fcallgraph-info=su,da");
+      for Switches ("ada") use ("-gnatVa", "-g", "-gnato", "-fstack-check", "-gnat12", "-fcallgraph-info=su,da");
    end Compiler;
 
    package Linker is

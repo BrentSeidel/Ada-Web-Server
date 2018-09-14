@@ -9,10 +9,21 @@ package body http is
    begin
       String'Write(s, "HTTP/1.0 200 OK" & CRLF);
       String'Write(s, "Content-Type: " & txt & CRLF);
-      String'Write(s, "Server: Custom Ada 2012" & CRLF);
+      String'Write(s, web_common.server_header);
       String'Write(s, "Connection: Close" & CRLF);
       String'Write(s, CRLF);
-   end;
+   end ok;
+   --
+   -- Return code 200 OK for OPTIONS reqest cases
+   --
+   procedure options_ok(s : GNAT.Sockets.Stream_Access) is
+   begin
+      String'Write(s, "HTTP/1.0 200 OK" & CRLF);
+      String'Write(s, "Allow: OPTIONS, GET, POST" & CRLF);
+      String'Write(s, web_common.server_header);
+      String'Write(s, "Content-Length: 0" & CRLF);
+      String'Write(s, CRLF);
+   end options_ok;
    --
    -- Return code 404 NOT FOUND for when the requested item is not in the
    -- directory.
@@ -21,13 +32,13 @@ package body http is
    begin
       String'Write(s, "HTTP/1.0 404 NOT FOUND" & CRLF);
       String'Write(s, "Content-Type: text/html" & CRLF);
-      String'Write(s, "Server: Custom Ada 2012" & CRLF);
+      String'Write(s, web_common.server_header);
       String'Write(s, "Connection: Close" & CRLF);
       String'Write(s, CRLF);
       String'Write(s, "<html><head><title>" & item & " not found</title></head>");
       String'Write(s, "<body>Item " & item & " cannot be found on the server.");
       String'Write(s, "</body></html>");
-   end;
+   end not_found;
    --
    -- Return code 500 INTERNAL SERVER ERROR generally when unable to open the
    -- file for the specified item.
@@ -36,13 +47,13 @@ package body http is
    begin
       String'Write(s, "HTTP/1.0 500 INTERNAL ERROR" & CRLF);
       String'Write(s, "Content-Type: text/html" & CRLF);
-      String'Write(s, "Server: Custom Ada 2012" & CRLF);
+      String'Write(s, web_common.server_header);
       String'Write(s, "Connection: Close" & CRLF);
       String'Write(s, CRLF);
       String'Write(s, "<html><head><title>Internal Error</title></head>");
       String'Write(s, "<body>Internal error trying to serve " & file);
       String'Write(s, "</body></html>");
-   end;
+   end internal_error;
    --
    -- Return code 501 NOT IMPLEMENTED for any request other than GET or POST.
    --
@@ -50,13 +61,13 @@ package body http is
    begin
       String'Write(s, "HTTP/1.0 501 NOT IMPLEMENTED" & CRLF);
       String'Write(s, "Content-Type: text/html" & CRLF);
-      String'Write(s, "Server: Custom Ada 2012" & CRLF);
+      String'Write(s, web_common.server_header);
       String'Write(s, "Connection: Close" & CRLF);
       String'Write(s, CRLF);
       String'Write(s, "<html><head><title>Request type not implemented</title></head>");
       String'Write(s, "<body>Request type " & req & " is not implemented");
       String'Write(s, "</body></html>");
-   end;
+   end not_implemented_req;
    --
    -- Return code 501 NOT IMPLEMENTED for a request for an internally generated
    -- item that is not yet implemented..
@@ -65,13 +76,13 @@ package body http is
    begin
       String'Write(s, "HTTP/1.0 501 NOT IMPLEMENTED" & CRLF);
       String'Write(s, "Content-Type: text/html" & CRLF);
-      String'Write(s, "Server: Custom Ada 2012" & CRLF);
+      String'Write(s, web_common.server_header);
       String'Write(s, "Connection: Close" & CRLF);
       String'Write(s, CRLF);
       String'Write(s, "<html><head><title>" & item & " not implemented</title></head>");
       String'Write(s, "<body>Item " & item & " is not yet implemented on the server.");
       String'Write(s, "</body></html>");
-   end;
+   end not_implemented_int;
 
    --
    -- Read a line from the input stream.  The line is terminated with a CR-LF.
@@ -94,7 +105,7 @@ package body http is
          exit when c = Ada.Characters.Latin_1.LF;
       end loop;
       return Ada.Strings.Unbounded.Head(str, Ada.Strings.Unbounded.Length(str) - 2);
-   end;
+   end get_line_from_stream;
    --
    -- Read a specified number of characters from an input stream.  This is needed
    -- because a POST request is not terminated by CRLF.  Instead the content-length
@@ -110,7 +121,7 @@ package body http is
          str := str & c;
       end loop;
       return str;
-   end;
+   end get_data_from_stream;
    --
    -- Read the headers from the request.  This will need to be updated to return
    -- the item being requested and any passed parameters.  Possibly it will also
@@ -141,10 +152,24 @@ package body http is
       req := Ada.Strings.Unbounded.Head(line, index - 1);
       line := Ada.Strings.Unbounded.Tail(line,
                                          Ada.Strings.Unbounded.Length(line) - index);
-      if (req = "GET") then
+      if req = "CONNECT" then
+         method := CONNECT;
+      elsif req = "DELETE" then
+         method := DELETE;
+      elsif req = "GET" then
          method := GET;
-      elsif (req = "POST") then
+      elsif req = "HEAD" then
+         method := HEAD;
+      elsif req = "OPTIONS" then
+         method := OPTIONS;
+      elsif req = "PATCH" then
+         method := PATCH;
+      elsif req = "POST" then
          method := POST;
+      elsif req = "PUT" then
+         method := PUT;
+      elsif req = "TRACE" then
+         method := TRACE;
       else
          method := Other;
       end if;
@@ -152,7 +177,7 @@ package body http is
       -- Parse out the requested item.  Don't care about the HTTP version
       --
       index := Ada.Strings.Unbounded.Index(line, " ");
-      if (index > 0) then
+      if index > 0 then
          item := Ada.Strings.Unbounded.Head(line, index - 1);
          line := Ada.Strings.Unbounded.Tail(line,
                                             Ada.Strings.Unbounded.Length(line) - index);
@@ -171,7 +196,7 @@ package body http is
          -- header and determine the length.  To be strictly correct, the
          -- Content-Type: header should also be examined.
          --
-         if (method = POST) then
+         if method = POST then
             if (Ada.Strings.Unbounded.Head(line, 15) = "Content-Length:") then
                temp := Ada.Strings.Unbounded.Tail(line,
                                                   Ada.Strings.Unbounded.Length(line) - 16);
@@ -191,18 +216,19 @@ package body http is
             --
             line := item;
             index := Ada.Strings.Unbounded.Index(line, "?");
-            if (index > 0) then
+            if index > 0 then
                item := Ada.Strings.Unbounded.Head(line, index - 1);
                param_string := Ada.Strings.Unbounded.Tail(line,
                                                   Ada.Strings.Unbounded.Length(line) - index);
             end if;
          when POST =>
             --
-            -- I think that if the method is post, the parameters will need to
-            -- be read here.
+            -- If the method is post, the parameters will be read here.
             --
             param_string := get_data_from_stream(s, length);
-         when Other =>
+         when OPTIONS =>
+            options_ok(s);
+         when others =>
             not_implemented_req(s, Ada.Strings.Unbounded.To_String(req));
       end case;
       --
@@ -215,7 +241,7 @@ package body http is
             -- First split off a key value pair.  They are separated by '&'.
             --
             index := Ada.Strings.Unbounded.Index(param_string, "&");
-            if (index > 0) then
+            if index > 0 then
                temp := Ada.Strings.Unbounded.Head(param_string, index - 1);
                param_string := Ada.Strings.Unbounded.Tail(param_string,
                                                           Ada.Strings.Unbounded.Length(param_string) - index);
@@ -241,6 +267,6 @@ package body http is
             end;
          end loop;
       end if;
-   end;
+   end read_headers;
 
-end;
+end http;
