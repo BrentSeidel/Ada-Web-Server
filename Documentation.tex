@@ -58,7 +58,7 @@ This package contains routines to support the generation of HTML.  The visible r
 \end{itemize}
 
 \subsection{\texttt{http}}
-This package contains routines to support HTTP.  Currently GET and POST methods are supported with some minimal support for the OPTIONS method.  For the rest of the software, GET and POST are treated identically.  If a file or an internally generated item with no parameters is being served, any supplied parameters are just ignored. Some of these routines are intended for use by user code and some are not.  The visible routines are:
+This package contains routines to support HTTP.  Currently GET and POST methods are supported with some minimal support for the OPTIONS method.  GET methods are supported for all items while POST methods are only supported for internally generated items.  If a file or an internally generated item with no parameters is being served, any supplied parameters are just ignored. Some of these routines are intended for use by user code and some are not.  The visible routines are:
 \begin{itemize}
   \item \verb|ok(s : GNAT.Sockets.Stream_Access; txt: String)|\\
   Return code 200 OK for normal cases.
