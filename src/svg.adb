@@ -7,7 +7,9 @@ package body svg is
    --  does the extraction and checking of parameters and then calls another
    --  procedure to do the actual display.
    --
-   procedure thermometer(s : GNAT.Sockets.Stream_Access; p : web_common.params.Map) is
+   procedure thermometer(s : GNAT.Sockets.Stream_Access;
+                         h : web_common.params.Map;
+                         p : web_common.params.Map) is
       value : Integer;
       max : Integer := 250;
       min : Integer := 0;
@@ -112,7 +114,9 @@ package body svg is
    -- The value is clamped to be between min and max.  If the parameters are
    -- invalid, a Red-X is produced.
    --
-   procedure dial(s : GNAT.Sockets.Stream_Access; p : web_common.params.Map) is
+   procedure dial(s : GNAT.Sockets.Stream_Access;
+                  h : web_common.params.Map;
+                  p : web_common.params.Map) is
       value : Integer;
       max : Integer := 250;
       min : Integer := 0;

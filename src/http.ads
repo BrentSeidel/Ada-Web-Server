@@ -40,6 +40,7 @@ package http is
    procedure read_headers(s : GNAT.Sockets.Stream_Access;
                           method : out request_type;
                           item : out Ada.Strings.Unbounded.Unbounded_String;
+                          headers : in out web_common.params.Map;
                           params : in out web_common.params.Map);
 
 private
@@ -47,7 +48,7 @@ private
    --
    -- Return code 200 OK for OPTIONS reqest cases
    --
-   procedure options_ok(s : GNAT.Sockets.Stream_Access);
+   procedure options_ok(s : GNAT.Sockets.Stream_Access; item : String);
    --
    -- Return code 501 NOT IMPLEMENTED for any unsupported request.  This is
    -- generated internal to the http package.

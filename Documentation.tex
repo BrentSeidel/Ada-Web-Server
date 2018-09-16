@@ -41,7 +41,35 @@ This package contains a number of items that are available for use in other pack
       Hash => Ada.Strings.Hash_Case_Insensitive,
       Equivalent_Keys => Ada.Strings.Equal_Case_Insensitive);
 \end{verbatim}
-If your code needs access to parameters passed in a GET or POST request, this is how you will get access to those parameters.  There are some examples where this is used in the \texttt{internal} and \texttt{svg} packages.
+If your code needs access to parameters passed in a GET or POST request, this is how you will get access to those parameters.  There are some examples where this is used in the \texttt{internal} and \texttt{svg} packages.  Both parameters and headers use this hash map type.
+
+Another hash map type is instantiated for internally generated items.  First, every internal item procedure has the same signature so an access type can be created as:
+\begin{verbatim}
+   --
+   --  Define a type for the user procedures.  This is for a map used to map
+   --  the internal procedures.  The parameters are:
+   --    s - The stream to write output to.
+   --    p - Any passed parameters from the HTTP request
+   --    h - HTTP request headers.
+   --
+   type user_proc is access procedure (s : GNAT.Sockets.Stream_Access;
+                                       p : params.Map;
+                                       h : params.Map);
+\end{verbatim}
+Then the hash map package is instantiated as:
+\begin{verbatim}
+   --
+   --  Instantiate a hashed map indexed by a string and containing procedure
+   --  accesses.  Used as a table to identify which internal procedure to call
+   --  for internal requests.
+   --
+   package proc_tables is new Ada.Containers.Indefinite_Hashed_Maps
+     (Element_Type => user_proc,
+      Key_Type => String,
+      Hash => Ada.Strings.Hash_Case_Insensitive,
+      Equivalent_Keys => Ada.Strings.Equal_Case_Insensitive);
+\end{verbatim}
+This map is populated and used in the \texttt{web\_server} package.
 
 \subsection{\texttt{web\_server}}
 This package contains the main web server software.  Since this package calls the user code, any attempt by user code to call items in this package will create a circular dependency.  Items that may be needed by user code should be in \texttt{web\_common}.
@@ -73,26 +101,50 @@ This package contains routines to support HTTP.  Currently GET and POST methods 
              item : out Ada.Strings.Unbounded.Unbounded_String;
              params : in out web_common.params.Map)
             \end{verbatim}
-   The \texttt{read\_headers} procedure handles both GET, POST, and OPTIONS request and returns any passed parameters.  Returned values will be the requested item in \texttt{item} and a dictionary containing the parameters in \texttt{params}.  If there are no parameters, the dictionary will be empty.  This routine is called by the web server to read the headers of the HTTP request.  By the time any user code is called, the headers have already been read.  The OPTIONS request simply returns headers stating that GET, POST, and OPTIONS are valid methods for any items on the server.
+   The \texttt{read\_headers} procedure handles both GET, POST, and OPTIONS request and returns any passed parameters.  Returned values will be the requested item in \texttt{item} and a dictionary containing the parameters in \texttt{params}.  If there are no parameters, the dictionary will be empty.  This routine is called by the web server to read the headers of the HTTP request.  By the time any user code is called, the headers have already been read.
 \end{itemize}
 
 \subsection{\texttt{internal}}
 This package contains routines to generate HTML or XML for internally generated items.  The generated HTML or XML is written to the \texttt{Stream\_Access} that needs to be passed in.  The proper HTTP headers also need to be written.  None of the routines in this package are required and can be changed around as needed.  They do provide some examples of how to generate items.  The internal routines can have access to parameters passed in the GET or POST request.  If no parameters were passed, the dictionary is empty.  The internal routines cannot distinguish between a GET or a POST request.  The visible routines are:
 \begin{itemize}
-  \item \verb|xml_count(s : GNAT.Sockets.Stream_Access)|\\
+  \item \begin{verbatim}
+procedure xml_count(s : GNAT.Sockets.Stream_Access;
+                    h : web_common.params.Map;
+                    p : web_common.params.Map);
+\end{verbatim}
+%\verb|xml_count(s : GNAT.Sockets.Stream_Access)|\\
   Sends the count of transactions as an xml message.
-  \item \verb|html_show_config(s : GNAT.Sockets.Stream_Access)|\\
+  \item \begin{verbatim}
+procedure html_show_config(s : GNAT.Sockets.Stream_Access;
+                           h : web_common.params.Map;
+                           p : web_common.params.Map);
+\end{verbatim}
+%\verb|html_show_config(s : GNAT.Sockets.Stream_Access)|\\
   Sends the configuration data as a HTML table.
-  \item \verb|target(s : GNAT.Sockets.Stream_Access; p : web_common.params.Map)|\\
+  \item \begin{verbatim}
+procedure target(s : GNAT.Sockets.Stream_Access;
+                 h : web_common.params.Map;
+                 p : web_common.params.Map);
+\end{verbatim}
+%\verb|target(s : GNAT.Sockets.Stream_Access; p : web_common.params.Map)|\\
   Sends the parameters provided as a HTML table.
-  \item \verb|html_reload_config(s : GNAT.Sockets.Stream_Access)|\\
+  \item \begin{verbatim}
+procedure html_reload_config(s : GNAT.Sockets.Stream_Access;
+                             h : web_common.params.Map;
+                             p : web_common.params.Map);
+\end{verbatim}
+%\verb|html_reload_config(s : GNAT.Sockets.Stream_Access)|\\
   Request that the configuration file be reloaded.  This can be useful during development and debugging.
 \end{itemize}
 
 \subsection{\texttt{svg}}
 This package contains routines to generate SVG for internally generated items.  The generated SVG is written to the \texttt{Stream\_Access} that needs to be passed in.  The proper HTTP headers also need to be written.  The visible routines are:
 \begin{itemize}
-  \item \verb|thermometer(s : GNAT.Sockets.Stream_Access; p : web_common.params.Map)|\\
+  \item \begin{verbatim}
+procedure thermometer(s : GNAT.Sockets.Stream_Access;
+                      h : web_common.params.Map;
+                      p : web_common.params.Map);
+\end{verbatim}
   Send SVG code to display a thermometer showing the value parameter.  This procedure handles getting and checking the parameters.  The following parameters are supported:
   \begin{itemize}
     \item \texttt{min} -- The minimum displayed value
@@ -100,7 +152,11 @@ This package contains routines to generate SVG for internally generated items.  
     \item \texttt{value} -- The value to display.
   \end{itemize}
   The value is clamped to be between \texttt{min} and \texttt{max}.  If any exceptions occur in parsing the parameters or if \texttt{min} is greater than \texttt{max}, a red ``X'' will be presented as the graphic to indicate an error condition.  Using the default configuration, this could be requested as \texttt{/Thermometer?min=0\&max=100\&value=50}
-  \item \verb|dial(s : GNAT.Sockets.Stream_Access; p : web_common.params.Map)|\\
+  \item \begin{verbatim}
+procedure dial(s : GNAT.Sockets.Stream_Access;
+               h : web_common.params.Map;
+               p : web_common.params.Map);
+\end{verbatim}
   Send SVG code to display a round dial with a pointer to the appropriate value. The following parameters are supported:
   \begin{itemize}
     \item \texttt{min} -- The minimum displayed value
@@ -152,10 +208,10 @@ To change the port used by the server, the value of \texttt{web\_common.port} ne
 To change the number of tasks (threads) available for serving, change the \texttt{num\_handlers} constant in \texttt{web\_server.ads}.  The default value is 10, which should be adequate.  If memory is tight, it can be reduced. If higher performance is needed, this number can be increased.
 
 \section{Modifications}
-To add or change internally generated items, the code will need to be modified and recompiled.  In both cases, the first place to look in the software is the \texttt{decode\_internal} procedure in the \texttt{web\_server.adb} file.
+To add or change internally generated items, the code will need to be modified and recompiled.  In both cases, the first place to look in the software is the \texttt{build\_internal\_map} procedure in the \texttt{web\_server.adb} file.
 
 \subsection{Modifications to Existing Items}
-First, identify the routine to modify by looking at the \texttt{decode\_internal} procedure.  Then the appropriate files can be edited and the routine located.  Once the routine is located, any necessary modifications can be made.
+First, identify the routine to modify by looking at the \texttt{build\_internal\_map} procedure.  Then the appropriate files can be edited and the routine located.  Once the routine is located, any necessary modifications can be made.
 
 \subsection{Adding New Items}
 The very first thing is to decide what you can your item to do.  The existing software has examples of routines that generate HTML, XML, and SVG.  These can be used as models.  These are contained in the \texttt{internal} (for HTML and XML) and \texttt{svg} (for SVG) packages.  If you need to interface with other hardware or software, it will probably be best to add new packages for these interfaces.

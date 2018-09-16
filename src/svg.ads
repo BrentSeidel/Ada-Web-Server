@@ -20,10 +20,12 @@ package svg is
    -- The value is clamped to be between min and max.  If the parameters are
    -- invalid, a Red-X is produced.
    --
-   procedure thermometer(s : GNAT.Sockets.Stream_Access; p : web_common.params.Map);
+   procedure thermometer(s : GNAT.Sockets.Stream_Access;
+                         h : web_common.params.Map;
+                         p : web_common.params.Map);
    --
    --  Display a round dial with a pointer to the appropriate value. The
-   -- following parameters are supported:
+   --  following parameters are supported:
    --    min - The minimum displayed value
    --    max - The maximum displayed value
    --    value - The value to display.
@@ -31,7 +33,9 @@ package svg is
    -- The value is clamped to be between min and max.  If the parameters are
    -- invalid, a Red-X is produced.
    --
-   procedure dial(s : GNAT.Sockets.Stream_Access; p : web_common.params.Map);
+   procedure dial(s : GNAT.Sockets.Stream_Access;
+                  h : web_common.params.Map;
+                  p : web_common.params.Map);
 
 private
    CRLF : String renames web_common.CRLF;

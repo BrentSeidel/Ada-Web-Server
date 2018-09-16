@@ -3,8 +3,8 @@ with Ada.Text_IO.Unbounded_IO;
 package body web_common is
 
    --
-   -- A protected type for maintianing a counter of active request_handler
-   -- tasks.
+   --  A protected type for maintianing a counter of active request_handler
+   --  tasks.
    --
    protected body protected_counter is
       procedure increment is
@@ -23,24 +23,24 @@ package body web_common is
       end;
    end protected_counter;
    --
-   -- Load the dictionary from a file.  No error checking is done on the open
-   -- since if this doesn't work, there really isn't much point in continuing.
+   --  Load the dictionary from a file.  No error checking is done on the open
+   --  since if this doesn't work, there really isn't much point in continuing.
    --
-   -- Each line of the file must contain three entries each separated by a single
-   -- space.  The entries themselves cannot contain spaces.
+   --  Each line of the file must contain three entries each separated by a
+   --  single space.  The entries themselves cannot contain spaces.
    --
-   -- The first entry is the reqested item.  This is what the client sends to the
-   -- server.  Since the client HTML encodes certain characters, this will have
-   -- to match the encoded value.
+   --  The first entry is the reqested item.  This is what the client sends to
+   --  the server.  Since the client HTML encodes certain characters, this will
+   --  have to match the encoded value.
    --
-   -- The second entry is either the local filename or a name to identify an
-   -- internal routine to generate data.
+   --  The second entry is either the local filename or a name to identify an
+   --  internal routine to generate data.
    --
-   -- The last entry is the MIME type of the file or "internal" if the data is
-   -- generated internally.
+   --  The last entry is the MIME type of the file or "internal" if the data is
+   --  generated internally.
    --
-   -- Comments can be added.  A comment is indicated by a '#' character at the
-   -- start of a line.  Everything through the end of that line is ignored.
+   --  Comments can be added.  A comment is indicated by a '#' character at the
+   --  start of a line.  Everything through the end of that line is ignored.
    --
    procedure load_directory(name : String) is
       file : Ada.Text_IO.File_Type;
@@ -58,18 +58,18 @@ package body web_common is
       while not Ada.Text_IO.End_Of_File(file) loop
          line := Ada.Text_IO.Unbounded_IO.Get_Line(file);
          --
-         -- Check for comment.  First character is '#'.
+         --  Check for comment.  First character is '#'.
          --
          if (Ada.Strings.Unbounded.Element(line, 1) /= '#') then
             --
-            -- Parse out the item
+            --  Parse out the item
             --
             space := Ada.Strings.Unbounded.Index(line, " ");
             item := Ada.Strings.Unbounded.Head(line, space - 1);
             line := Ada.Strings.Unbounded.Tail(line,
                                                Ada.Strings.Unbounded.Length(line) - space);
             --
-            -- Parse out the location and MIME type
+            --  Parse out the location and MIME type
             --
             space := Ada.Strings.Unbounded.Index(line, " ");
             location := Ada.Strings.Unbounded.Head(line, space - 1);
@@ -81,9 +81,9 @@ package body web_common is
          end if;
       end loop;
       Ada.Text_IO.Close(file);
-   end;
+   end load_directory;
    --
-   -- Convert a hex digit character to a number
+   --  Convert a hex digit character to a number
    --
    function hex_digit(c : Character) return Integer is
       n : Integer := 0;
@@ -125,9 +125,9 @@ package body web_common is
             n := 0;
       end case;
       return n;
-   end;
+   end hex_digit;
    --
-   -- URL Decode a string.
+   --  URL Decode a string.
    --
    function url_decode(s : String) return String is
       t : Ada.Strings.Unbounded.Unbounded_String := Ada.Strings.Unbounded.Null_Unbounded_String;
@@ -150,6 +150,6 @@ package body web_common is
          t := t & c;
       end loop;
       return Ada.Strings.Unbounded.To_String(t);
-   end;
+   end url_decode;
 
 end;

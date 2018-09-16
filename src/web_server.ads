@@ -1,22 +1,20 @@
 with Ada.Strings.Unbounded;
 use type Ada.Strings.Unbounded.Unbounded_String;
 with GNAT.Sockets;
---with http;
---use type http.request_type;
 with web_common;
 
 package web_server is
+   --
+   --  Build the map for internal procedure calls.  The key strings must match
+   --  the identifications in the configuration file.  This needs to be here
+   --  so that the various internal routines are accessable.
+   --
+   procedure build_internal_map;
    --
    -- This is the web server.  In initializes the network interface and enters
    -- an infinite loop processing requests.
    --
    procedure server;
-   --
-   -- Simple procedure to decode internally generated pages.  It's used by both
-   -- GET and POST methods and so should be common.
-   --
-   procedure decode_internal(s : GNAT.Sockets.Stream_Access; name : String;
-                             p : web_common.params.Map);
    --
    -- Handle the details of the http request.  When a request comes in, the
    -- socket is passed via the start entry point to the task.  The task handles

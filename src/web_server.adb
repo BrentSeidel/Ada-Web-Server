@@ -1,4 +1,4 @@
---  with Ada.Text_IO;
+with Ada.Text_IO;
 with text;
 with binary;
 with internal;
@@ -6,6 +6,25 @@ with svg;
 with http;
 use type http.request_type;
 package body web_server is
+   --
+   --  Build the map for internal procedure calls.  The key strings must match
+   --  the identifications in the configuration file.  The generated map is
+   --  used by both the GET and POST methods.
+   --
+   procedure build_internal_map is
+   begin
+      --
+      --  ******************************************************
+      --  Customization goes here to add any internally routines
+      --  to generate responses.
+      --
+      web_common.internal_map.Insert("thermometer", svg.thermometer'Access);
+      web_common.internal_map.Insert("dial", svg.dial'Access);
+      web_common.internal_map.Insert("configure", internal.html_show_config'Access);
+      web_common.internal_map.Insert("target", internal.target'Access);
+      web_common.internal_map.Insert("reload", internal.html_reload_config'Access);
+      web_common.internal_map.Insert("counter", internal.xml_count'Access);
+   end;
    --
    --  This is the web server.  In initializes the network interface and enters
    --  an infinite loop processing requests.
@@ -18,6 +37,7 @@ package body web_server is
       handler_index : Natural := 1;
    begin
       web_common.load_directory("config.txt");
+      build_internal_map;
       --
       --  Do a bunch of initialization stuff.  We want to listen on any
       --  interface to the specified port.  The socket is IPv4 TCP/IP.
@@ -73,6 +93,7 @@ package body web_server is
    --
    task body request_handler is
       item : Ada.Strings.Unbounded.Unbounded_String;
+      headers : web_common.params.Map;
       req : http.request_type;
       el : web_common.element;
       param : web_common.params.Map;
@@ -100,7 +121,8 @@ package body web_server is
          --  passed parameters so that forms can be processed.
          --
          param.Clear;
-         http.read_headers(s, req, item, param);
+         headers.Clear;
+         http.read_headers(s, req, item, headers, param);
          --
          --  Check the request type.  If the type is Other, a request type not
          --  implemented response has already been sent.
@@ -146,7 +168,9 @@ package body web_server is
                         --
                         binary.send_file_with_headers(s, mime, name);
                      elsif mime = "internal" then
-                        decode_internal(s, name, param);
+                        if web_common.internal_map.Contains(name) then
+                           web_common.internal_map.Element(name)(s, headers, param);
+                        end if;
                      else
                         --
                         --  If the mime type is unrecognized, it is an internal
@@ -171,7 +195,9 @@ package body web_server is
                      mime : constant String := Ada.Strings.Unbounded.To_String(el.mime);
                   begin
                      if mime = "internal" then
-                        decode_internal(s, name, param);
+                        if web_common.internal_map.Contains(name) then
+                           web_common.internal_map.Element(name)(s, headers, param);
+                        end if;
                      else
                         --
                         --  If the mime type is unrecognized, it is an internal
@@ -193,34 +219,5 @@ package body web_server is
          web_common.task_counter.decrement;
       end loop;
    end request_handler;
-   --
-   --  Simple procedure to decode internally generated pages.  It's used by
-   --  both GET and POST methods and so should be common.
-   --
-   procedure decode_internal(s : GNAT.Sockets.Stream_Access; name : String;
-                             p : web_common.params.Map) is
-   begin
-      --
-      --  ******************************************************
-      --  Customization goes here to add any internally routines
-      --  to generate responses.
-      --
-      if name = "counter" then
-         internal.xml_count(s);
-      elsif name = "configure" then
-         internal.html_show_config(s);
-      elsif name = "target" then
-         internal.target(s, p);
-      elsif name = "thermometer" then
-         svg.thermometer(s, p);
-      elsif name = "dial" then
-         svg.dial(s, p);
-      elsif name = "reload" then
-         internal.html_reload_config(s);
-      else
-         http.not_implemented_int(s, name);
-      end if;
-   end decode_internal;
-
 
 end web_server;

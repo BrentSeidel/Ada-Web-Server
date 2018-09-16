@@ -3,7 +3,7 @@ with Ada.Text_IO;
 package body http is
 
    --
-   -- Return code 200 OK for normal cases
+   --  Return code 200 OK for normal cases
    --
    procedure ok(s : GNAT.Sockets.Stream_Access; txt: String) is
    begin
@@ -14,19 +14,34 @@ package body http is
       String'Write(s, CRLF);
    end ok;
    --
-   -- Return code 200 OK for OPTIONS reqest cases
+   --  Return code 200 OK for OPTIONS reqest cases
    --
-   procedure options_ok(s : GNAT.Sockets.Stream_Access) is
+   procedure options_ok(s : GNAT.Sockets.Stream_Access; item : String) is
    begin
       String'Write(s, "HTTP/1.0 200 OK" & CRLF);
-      String'Write(s, "Allow: OPTIONS, GET, POST" & CRLF);
+      if item = "*" then
+         String'Write(s, "Allow: OPTIONS, GET, POST" & CRLF);
+      elsif web_common.directory.Contains(item) then
+         declare
+            el : constant web_common.element := web_common.directory.Element(item);
+            mime : constant String := Ada.Strings.Unbounded.To_String(el.mime);
+         begin
+            if mime = "internal" then
+               String'Write(s, "Allow: OPTIONS, GET, POST" & CRLF);
+            else
+               String'Write(s, "Allow: OPTIONS, GET" & CRLF);
+            end if;
+         end;
+      else
+         String'Write(s, "Allow: OPTIONS" & CRLF);
+      end if;
       String'Write(s, web_common.server_header);
       String'Write(s, "Content-Length: 0" & CRLF);
       String'Write(s, CRLF);
    end options_ok;
    --
-   -- Return code 404 NOT FOUND for when the requested item is not in the
-   -- directory.
+   --  Return code 404 NOT FOUND for when the requested item is not in the
+   --  directory.
    --
    procedure not_found(s : GNAT.Sockets.Stream_Access; item: String) is
    begin
@@ -40,8 +55,8 @@ package body http is
       String'Write(s, "</body></html>");
    end not_found;
    --
-   -- Return code 500 INTERNAL SERVER ERROR generally when unable to open the
-   -- file for the specified item.
+   --  Return code 500 INTERNAL SERVER ERROR generally when unable to open the
+   --  file for the specified item.
    --
    procedure internal_error(s : GNAT.Sockets.Stream_Access; file: String) is
    begin
@@ -55,7 +70,7 @@ package body http is
       String'Write(s, "</body></html>");
    end internal_error;
    --
-   -- Return code 501 NOT IMPLEMENTED for any request other than GET or POST.
+   --  Return code 501 NOT IMPLEMENTED for any request other than GET or POST.
    --
    procedure not_implemented_req(s : GNAT.Sockets.Stream_Access; req: String) is
    begin
@@ -69,8 +84,8 @@ package body http is
       String'Write(s, "</body></html>");
    end not_implemented_req;
    --
-   -- Return code 501 NOT IMPLEMENTED for a request for an internally generated
-   -- item that is not yet implemented..
+   --  Return code 501 NOT IMPLEMENTED for a request for an internally generated
+   --  item that is not yet implemented..
    --
    procedure not_implemented_int(s : GNAT.Sockets.Stream_Access; item: String) is
    begin
@@ -85,9 +100,9 @@ package body http is
    end not_implemented_int;
 
    --
-   -- Read a line from the input stream.  The line is terminated with a CR-LF.
-   -- The CR-LF is stripped from the return string as it can just be assumed to
-   -- be there.
+   --  Read a line from the input stream.  The line is terminated with a CR-LF.
+   --  The CR-LF is stripped from the return string as it can just be assumed to
+   --  be there.
    --
    function get_line_from_stream(s : GNAT.Sockets.Stream_Access)
                                  return Ada.Strings.Unbounded.Unbounded_String is
@@ -107,9 +122,10 @@ package body http is
       return Ada.Strings.Unbounded.Head(str, Ada.Strings.Unbounded.Length(str) - 2);
    end get_line_from_stream;
    --
-   -- Read a specified number of characters from an input stream.  This is needed
-   -- because a POST request is not terminated by CRLF.  Instead the content-length
-   -- header needs to be parsed and that number of characters read at the end.
+   --  Read a specified number of characters from an input stream.  This is
+   --  needed because a POST request is not terminated by CRLF.  Instead the
+   --  content-length header needs to be parsed and that number of characters
+   --  read at the end.
    --
    function get_data_from_stream(s : GNAT.Sockets.Stream_Access; len : Natural)
                                  return Ada.Strings.Unbounded.Unbounded_String is
@@ -123,28 +139,23 @@ package body http is
       return str;
    end get_data_from_stream;
    --
-   -- Read the headers from the request.  This will need to be updated to return
-   -- the item being requested and any passed parameters.  Possibly it will also
-   -- be necessary to distinguish between GET and POST methods.  Any other method
-   -- will trigger a not_implemented_req() response.
-   --
-   -- Currently, everything is implemented, except for extracting parameters for
-   -- POST requests.  Parameters on GET requests are not handled and probably
-   -- won't be unless a need arises.
+   --  Read the headers from the request..
    --
    procedure read_headers(s : GNAT.Sockets.Stream_Access;
                           method : out request_type;
                           item : out Ada.Strings.Unbounded.Unbounded_String;
+                          headers : in out web_common.params.Map;
                           params : in out web_common.params.Map) is
       param_string : Ada.Strings.Unbounded.Unbounded_String := Ada.Strings.Unbounded.Null_Unbounded_String;
       length : Natural;
       line  : Ada.Strings.Unbounded.Unbounded_String;
       req   : Ada.Strings.Unbounded.Unbounded_String;
-      temp  : Ada.Strings.Unbounded.Unbounded_String;
+      temp1 : Ada.Strings.Unbounded.Unbounded_String;
+      temp2 : Ada.Strings.Unbounded.Unbounded_String;
       index : Natural;
    begin
       --
-      -- The first line contains the request.  Parse it out.
+      --  The first line contains the request.  Parse it out.
       --
       line := get_line_from_stream(s);
       Ada.Text_IO.Put_Line(Ada.Strings.Unbounded.To_String(line));
@@ -191,19 +202,26 @@ package body http is
       --
       loop
          line := get_line_from_stream(s);
+         exit when Ada.Strings.Unbounded.Length(line) = 0;
+         index := Ada.Strings.Unbounded.Index(line, " ");
+         temp1 := Ada.Strings.Unbounded.Head(line, index - 1);
+         temp2 := Ada.Strings.Unbounded.Tail(line,
+                                            Ada.Strings.Unbounded.Length(line) - index);
+--         Ada.Text_IO.Put_Line("Found header <" & Ada.Strings.Unbounded.To_String(temp1) &
+--                                "> with value <" & Ada.Strings.Unbounded.To_String(temp2) &
+--                                ">");
+         headers.Insert(Key      => Ada.Strings.Unbounded.To_String(temp1),
+                        New_Item => Ada.Strings.Unbounded.To_String(temp2));
          --
          -- If this is a POST request, we need to find the Content-Length:
          -- header and determine the length.  To be strictly correct, the
          -- Content-Type: header should also be examined.
          --
          if method = POST then
-            if (Ada.Strings.Unbounded.Head(line, 15) = "Content-Length:") then
-               temp := Ada.Strings.Unbounded.Tail(line,
-                                                  Ada.Strings.Unbounded.Length(line) - 16);
-               length := Natural'Value(Ada.Strings.Unbounded.To_String(temp));
+            if (temp1 = "Content-Length:") then
+               length := Natural'Value(Ada.Strings.Unbounded.To_String(temp2));
             end if;
          end if;
-         exit when Ada.Strings.Unbounded.Length(line) = 0;
 --         Ada.Text_IO.Put_Line(Ada.Strings.Unbounded.To_String(line));
       end loop;
       --
@@ -227,7 +245,7 @@ package body http is
             --
             param_string := get_data_from_stream(s, length);
          when OPTIONS =>
-            options_ok(s);
+            options_ok(s, Ada.Strings.Unbounded.To_String(item));
          when others =>
             not_implemented_req(s, Ada.Strings.Unbounded.To_String(req));
       end case;
@@ -242,11 +260,11 @@ package body http is
             --
             index := Ada.Strings.Unbounded.Index(param_string, "&");
             if index > 0 then
-               temp := Ada.Strings.Unbounded.Head(param_string, index - 1);
+               temp1 := Ada.Strings.Unbounded.Head(param_string, index - 1);
                param_string := Ada.Strings.Unbounded.Tail(param_string,
                                                           Ada.Strings.Unbounded.Length(param_string) - index);
             else
-               temp := param_string;
+               temp1 := param_string;
                param_string := Ada.Strings.Unbounded.Null_Unbounded_String;
             end if;
             --
@@ -254,13 +272,13 @@ package body http is
             -- them in the params map.  At this point, the value could be URL
             -- decoded.
             --
-            index := Ada.Strings.Unbounded.Index(temp, "=");
+            index := Ada.Strings.Unbounded.Index(temp1, "=");
             declare
                key : constant String := Ada.Strings.Unbounded.To_String(
-                                                     Ada.Strings.Unbounded.Head(temp, index - 1));
+                                                     Ada.Strings.Unbounded.Head(temp1, index - 1));
                value : constant String := web_common.url_decode(Ada.Strings.Unbounded.To_String(
-                                                       Ada.Strings.Unbounded.Tail(temp,
-                                                          Ada.Strings.Unbounded.Length(temp) - index)));
+                                                       Ada.Strings.Unbounded.Tail(temp1,
+                                                          Ada.Strings.Unbounded.Length(temp1) - index)));
             begin
                params.Insert(Key      => key,
                              New_Item => value);
