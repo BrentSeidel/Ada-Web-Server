@@ -2,12 +2,12 @@ With Ada.Strings;
 with Ada.Strings.Unbounded;
 use type Ada.Strings.Unbounded.Unbounded_String;
 with GNAT.Sockets;
-with web_common;
+with bbs.web_common;
 --
 --  This package contains an assorment of SVG widgets that can be used by
 --  procedurally generated web pages.
 --
-package svg is
+package bbs.svg is
 
    --
    --  Display a thermometer SVG showing the value parameter.  This procedure
@@ -21,8 +21,8 @@ package svg is
    -- invalid, a Red-X is produced.
    --
    procedure thermometer(s : GNAT.Sockets.Stream_Access;
-                         h : web_common.params.Map;
-                         p : web_common.params.Map);
+                         h : bbs.web_common.params.Map;
+                         p : bbs.web_common.params.Map);
    --
    --  Display a round dial with a pointer to the appropriate value. The
    --  following parameters are supported:
@@ -34,11 +34,11 @@ package svg is
    -- invalid, a Red-X is produced.
    --
    procedure dial(s : GNAT.Sockets.Stream_Access;
-                  h : web_common.params.Map;
-                  p : web_common.params.Map);
+                  h : bbs.web_common.params.Map;
+                  p : bbs.web_common.params.Map);
 
 private
-   CRLF : String renames web_common.CRLF;
+   CRLF : String renames bbs.web_common.CRLF;
    --
    --  Send the standard SVG header.
    --
@@ -56,4 +56,5 @@ private
    --  occured.
    --
    procedure red_x(s : GNAT.Sockets.Stream_Access; width : Integer; height : Integer);
-end;
+
+end bbs.svg;

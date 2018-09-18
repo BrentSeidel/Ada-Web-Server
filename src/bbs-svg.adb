@@ -1,6 +1,6 @@
 with Ada.Strings.Fixed;
-with http;
-package body svg is
+with bbs.http;
+package body bbs.svg is
 
    --
    --  Display a thermometer SVG showing the value parameter.  This procedire
@@ -8,32 +8,32 @@ package body svg is
    --  procedure to do the actual display.
    --
    procedure thermometer(s : GNAT.Sockets.Stream_Access;
-                         h : web_common.params.Map;
-                         p : web_common.params.Map) is
+                         h : bbs.web_common.params.Map;
+                         p : bbs.web_common.params.Map) is
       value : Integer;
       max : Integer := 250;
       min : Integer := 0;
       error : Boolean := false;
    begin
-      if web_common.params.Contains(p, "min") then
+      if bbs.web_common.params.Contains(p, "min") then
          begin
-            min := Integer'Value(web_common.params.Element(p, "min"));
+            min := Integer'Value(bbs.web_common.params.Element(p, "min"));
          exception
             when others =>
                error := True;
          end;
       end if;
-      if web_common.params.Contains(p, "max") then
+      if bbs.web_common.params.Contains(p, "max") then
          begin
-            max := Integer'Value(web_common.params.Element(p, "max"));
+            max := Integer'Value(bbs.web_common.params.Element(p, "max"));
          exception
             when others =>
                error := True;
          end;
       end if;
-      if web_common.params.Contains(p, "value") then
+      if bbs.web_common.params.Contains(p, "value") then
          begin
-            value := Integer'Value(web_common.params.Element(p, "value"));
+            value := Integer'Value(bbs.web_common.params.Element(p, "value"));
          exception
             when others =>
                error := True;
@@ -115,8 +115,8 @@ package body svg is
    -- invalid, a Red-X is produced.
    --
    procedure dial(s : GNAT.Sockets.Stream_Access;
-                  h : web_common.params.Map;
-                  p : web_common.params.Map) is
+                  h : bbs.web_common.params.Map;
+                  p : bbs.web_common.params.Map) is
       value : Integer;
       max : Integer := 250;
       min : Integer := 0;
@@ -126,25 +126,25 @@ package body svg is
       --
       --  Extract the parameters
       --
-      if web_common.params.Contains(p, "min") then
+      if bbs.web_common.params.Contains(p, "min") then
          begin
-            min := Integer'Value(web_common.params.Element(p, "min"));
+            min := Integer'Value(bbs.web_common.params.Element(p, "min"));
          exception
             when others =>
                error := true;
          end;
       end if;
-      if web_common.params.Contains(p, "max") then
+      if bbs.web_common.params.Contains(p, "max") then
          begin
-            max := Integer'Value(web_common.params.Element(p, "max"));
+            max := Integer'Value(bbs.web_common.params.Element(p, "max"));
          exception
             when others =>
                error := true;
          end;
       end if;
-      if web_common.params.Contains(p, "value") then
+      if bbs.web_common.params.Contains(p, "value") then
          begin
-            value := Integer'Value(web_common.params.Element(p, "value"));
+            value := Integer'Value(bbs.web_common.params.Element(p, "value"));
          exception
             when others =>
                error := true;
@@ -201,7 +201,7 @@ package body svg is
    --
    procedure svg_header(s : GNAT.Sockets.Stream_Access; width : Integer; height : Integer) is
    begin
-      http.ok(s, "image/svg+xml");
+      bbs.http.ok(s, "image/svg+xml");
       String'Write(s, "<?xml version=""1.0"" encoding=""UTF-8"" standalone=""no""?>" & CRLF);
       String'Write(s, "<svg version=""1.1"" baseProfile=""full"" " & "width="""
                    & Ada.Strings.Fixed.Trim(Integer'Image(width), Ada.Strings.Left) &
@@ -230,4 +230,4 @@ package body svg is
    end red_x;
 
 
-end;
+end bbs.svg;

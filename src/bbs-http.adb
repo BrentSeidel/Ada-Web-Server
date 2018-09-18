@@ -1,6 +1,6 @@
 with Ada.Characters.Latin_1;
 with Ada.Text_IO;
-package body http is
+package body bbs.http is
 
    --
    --  Return code 200 OK for normal cases
@@ -9,7 +9,7 @@ package body http is
    begin
       String'Write(s, "HTTP/1.0 200 OK" & CRLF);
       String'Write(s, "Content-Type: " & txt & CRLF);
-      String'Write(s, web_common.server_header);
+      String'Write(s, server_header);
       String'Write(s, "Connection: Close" & CRLF);
       String'Write(s, CRLF);
    end ok;
@@ -21,9 +21,9 @@ package body http is
       String'Write(s, "HTTP/1.0 200 OK" & CRLF);
       if item = "*" then
          String'Write(s, "Allow: OPTIONS, GET, POST" & CRLF);
-      elsif web_common.directory.Contains(item) then
+      elsif bbs.web_common.directory.Contains(item) then
          declare
-            el : constant web_common.element := web_common.directory.Element(item);
+            el : constant bbs.web_common.element := bbs.web_common.directory.Element(item);
             mime : constant String := Ada.Strings.Unbounded.To_String(el.mime);
          begin
             if mime = "internal" then
@@ -35,7 +35,7 @@ package body http is
       else
          String'Write(s, "Allow: OPTIONS" & CRLF);
       end if;
-      String'Write(s, web_common.server_header);
+      String'Write(s, server_header);
       String'Write(s, "Content-Length: 0" & CRLF);
       String'Write(s, CRLF);
    end options_ok;
@@ -47,7 +47,7 @@ package body http is
    begin
       String'Write(s, "HTTP/1.0 404 NOT FOUND" & CRLF);
       String'Write(s, "Content-Type: text/html" & CRLF);
-      String'Write(s, web_common.server_header);
+      String'Write(s, server_header);
       String'Write(s, "Connection: Close" & CRLF);
       String'Write(s, CRLF);
       String'Write(s, "<html><head><title>" & item & " not found</title></head>");
@@ -62,7 +62,7 @@ package body http is
    begin
       String'Write(s, "HTTP/1.0 500 INTERNAL ERROR" & CRLF);
       String'Write(s, "Content-Type: text/html" & CRLF);
-      String'Write(s, web_common.server_header);
+      String'Write(s, server_header);
       String'Write(s, "Connection: Close" & CRLF);
       String'Write(s, CRLF);
       String'Write(s, "<html><head><title>Internal Error</title></head>");
@@ -76,7 +76,7 @@ package body http is
    begin
       String'Write(s, "HTTP/1.0 501 NOT IMPLEMENTED" & CRLF);
       String'Write(s, "Content-Type: text/html" & CRLF);
-      String'Write(s, web_common.server_header);
+      String'Write(s, server_header);
       String'Write(s, "Connection: Close" & CRLF);
       String'Write(s, CRLF);
       String'Write(s, "<html><head><title>Request type not implemented</title></head>");
@@ -91,7 +91,7 @@ package body http is
    begin
       String'Write(s, "HTTP/1.0 501 NOT IMPLEMENTED" & CRLF);
       String'Write(s, "Content-Type: text/html" & CRLF);
-      String'Write(s, web_common.server_header);
+      String'Write(s, server_header);
       String'Write(s, "Connection: Close" & CRLF);
       String'Write(s, CRLF);
       String'Write(s, "<html><head><title>" & item & " not implemented</title></head>");
@@ -144,8 +144,8 @@ package body http is
    procedure read_headers(s : GNAT.Sockets.Stream_Access;
                           method : out request_type;
                           item : out Ada.Strings.Unbounded.Unbounded_String;
-                          headers : in out web_common.params.Map;
-                          params : in out web_common.params.Map) is
+                          headers : in out bbs.web_common.params.Map;
+                          params : in out bbs.web_common.params.Map) is
       param_string : Ada.Strings.Unbounded.Unbounded_String := Ada.Strings.Unbounded.Null_Unbounded_String;
       length : Natural;
       line  : Ada.Strings.Unbounded.Unbounded_String;
@@ -276,7 +276,7 @@ package body http is
             declare
                key : constant String := Ada.Strings.Unbounded.To_String(
                                                      Ada.Strings.Unbounded.Head(temp1, index - 1));
-               value : constant String := web_common.url_decode(Ada.Strings.Unbounded.To_String(
+               value : constant String := bbs.web_common.url_decode(Ada.Strings.Unbounded.To_String(
                                                        Ada.Strings.Unbounded.Tail(temp1,
                                                           Ada.Strings.Unbounded.Length(temp1) - index)));
             begin
@@ -287,4 +287,4 @@ package body http is
       end if;
    end read_headers;
 
-end http;
+end bbs.http;

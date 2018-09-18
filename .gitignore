@@ -11,3 +11,4 @@ main
 *.log
 *.gz
 *.aux
+*.dvi

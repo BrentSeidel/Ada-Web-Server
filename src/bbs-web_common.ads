@@ -9,7 +9,7 @@ with GNAT.Sockets;
 --
 --  This package contains assorted common constants and data for the web server.
 --
-package web_common is
+package bbs.web_common is
 
    --
    --  Record type containing a file name and a MIME type.  Used to identify
@@ -75,8 +75,6 @@ package web_common is
    --  Common data.
    --
    directory : dictionary.Map;
-   internal_map : proc_tables.Map;
-   port : constant GNAT.Sockets.Port_Type := 31415;
    CRLF : constant String := Ada.Characters.Latin_1.CR & Ada.Characters.Latin_1.LF;
    server_header : constant String := "Server: Custom Ada 2012 Server" & CRLF;
    --
@@ -106,4 +104,4 @@ package web_common is
    --  reloaded.  This would typically be used during development or debugging.
    --
    reload_configuration : Boolean := False;
-end;
+end bbs.web_common;

@@ -1,12 +1,12 @@
 with Ada.Text_IO;
 with Ada.Text_IO.Unbounded_IO;
-with http;
-package body text is
+with bbs.http;
+package body bbs.text is
 
    --
-   -- Send the contents of the specified text type file out to the client
-   -- program.  If the file can't be opened, a HTTP 404 NOT FOUND code is
-   -- returned instead of 200 OK.
+   --  Send the contents of the specified text type file out to the client
+   --  program.  If the file can't be opened, a HTTP 404 NOT FOUND code is
+   --  returned instead of 200 OK.
    --
    procedure send_file_with_headers(s : GNAT.Sockets.Stream_Access;
                                     mime : String; name : String) is
@@ -19,19 +19,19 @@ package body text is
                           Name     => name);
       exception
          when others =>
-            http.internal_error(s, name);
+            bbs.http.internal_error(s, name);
             return;
       end;
-      http.ok(s, mime);
+      bbs.http.ok(s, mime);
       while not Ada.Text_IO.End_Of_File(file) loop
          line := Ada.Text_IO.Unbounded_IO.Get_Line(file);
          String'Write(s, Ada.Strings.Unbounded.To_String(line) & CRLF);
       end loop;
       Ada.Text_IO.Close(file);
-   end;
+   end send_file_with_headers;
    --
-   -- This procedure sends a text file to the client with headers.  If the file
-   -- cannot be opened, the procedure simply returns.
+   --  This procedure sends a text file to the client with headers.  If the file
+   --  cannot be opened, the procedure simply returns.
    --
    procedure send_file_without_headers(s : GNAT.Sockets.Stream_Access;
                                     name : String) is
@@ -51,6 +51,6 @@ package body text is
          String'Write(s, Ada.Strings.Unbounded.To_String(line) & CRLF);
       end loop;
       Ada.Text_IO.Close(file);
-   end;
+   end send_file_without_headers;
 
-end;
+end bbs.text;

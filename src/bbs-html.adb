@@ -1,16 +1,16 @@
 with Ada.Text_IO;
 with Ada.Text_IO.Unbounded_IO;
-package body html is
+package body bbs.html is
 
    --
-   -- Generate a standard HTML heading.  This just has a title attribute
+   --  Generate a standard HTML heading.  This just has a title attribute
    --
    procedure html_head(s : GNAT.Sockets.Stream_Access; title: String) is
    begin
       String'Write(s, "<html><head><title>" & title & "</title></head><body>" & CRLF);
-   end;
+   end html_head;
    --
-   -- Generate a simple HTML heading with style sheet
+   --  Generate a simple HTML heading with style sheet
    --
    procedure html_head(s : GNAT.Sockets.Stream_Access; title: String; style : String) is
    begin
@@ -18,10 +18,10 @@ package body html is
       String'Write(s, "<title>" & title & "</title>" & CRLF);
       String'Write(s, "<link rel=""stylesheet"" type=""text/css"" href=""" & style & """>" & CRLF);
       String'Write(s, "</head><body>" & CRLF);
-   end;
+   end html_head;
    --
-   -- Generate a standard HTML ending.  The ending should be in a file.  If the
-   -- file can't be found, a minimal ending is substatuted.
+   --  Generate a standard HTML ending.  The ending should be in a file.  If the
+   --  file can't be found, a minimal ending is substatuted.
    --
    procedure html_end(s : GNAT.Sockets.Stream_Access; name: String) is
       line : Ada.Strings.Unbounded.Unbounded_String;
@@ -41,6 +41,6 @@ package body html is
          String'Write(s, Ada.Strings.Unbounded.To_String(line) & CRLF);
       end loop;
       Ada.Text_IO.Close(file);
-   end;
+   end html_end;
 
-end;
+end bbs.html;

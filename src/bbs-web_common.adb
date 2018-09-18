@@ -1,6 +1,6 @@
 with Ada.Text_IO;
 with Ada.Text_IO.Unbounded_IO;
-package body web_common is
+package body bbs.web_common is
 
    --
    --  A protected type for maintianing a counter of active request_handler
@@ -152,4 +152,4 @@ package body web_common is
       return Ada.Strings.Unbounded.To_String(t);
    end url_decode;
 
-end;
+end bbs.web_common;

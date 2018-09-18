@@ -2,9 +2,9 @@ with Ada.Strings;
 with Ada.Strings.Unbounded;
 use type Ada.Strings.Unbounded.Unbounded_String;
 with GNAT.Sockets;
-with web_common;
+with bbs.web_common;
 
-package http is
+package bbs.http is
 
    --
    -- Type of request.  OPTIONS, GET, and POST are supported.  All others will
@@ -40,11 +40,12 @@ package http is
    procedure read_headers(s : GNAT.Sockets.Stream_Access;
                           method : out request_type;
                           item : out Ada.Strings.Unbounded.Unbounded_String;
-                          headers : in out web_common.params.Map;
-                          params : in out web_common.params.Map);
+                          headers : in out bbs.web_common.params.Map;
+                          params : in out bbs.web_common.params.Map);
 
 private
-   CRLF : String renames web_common.CRLF;
+   CRLF : String renames bbs.web_common.CRLF;
+   server_header : String renames bbs.web_common.server_header;
    --
    -- Return code 200 OK for OPTIONS reqest cases
    --
@@ -65,4 +66,4 @@ private
    function get_data_from_stream(s : GNAT.Sockets.Stream_Access; len : Natural)
                                  return Ada.Strings.Unbounded.Unbounded_String;
 
-end;
+end bbs.http;
