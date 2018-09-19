@@ -158,7 +158,9 @@ package body bbs.http is
       --  The first line contains the request.  Parse it out.
       --
       line := get_line_from_stream(s);
-      Ada.Text_IO.Put_Line(Ada.Strings.Unbounded.To_String(line));
+      if debug_req then
+         Ada.Text_IO.Put_Line(Ada.Strings.Unbounded.To_String(line));
+      end if;
       index := Ada.Strings.Unbounded.Index(line, " ");
       req := Ada.Strings.Unbounded.Head(line, index - 1);
       line := Ada.Strings.Unbounded.Tail(line,
@@ -207,9 +209,6 @@ package body bbs.http is
          temp1 := Ada.Strings.Unbounded.Head(line, index - 1);
          temp2 := Ada.Strings.Unbounded.Tail(line,
                                             Ada.Strings.Unbounded.Length(line) - index);
---         Ada.Text_IO.Put_Line("Found header <" & Ada.Strings.Unbounded.To_String(temp1) &
---                                "> with value <" & Ada.Strings.Unbounded.To_String(temp2) &
---                                ">");
          headers.Insert(Key      => Ada.Strings.Unbounded.To_String(temp1),
                         New_Item => Ada.Strings.Unbounded.To_String(temp2));
          --
@@ -222,7 +221,9 @@ package body bbs.http is
                length := Natural'Value(Ada.Strings.Unbounded.To_String(temp2));
             end if;
          end if;
---         Ada.Text_IO.Put_Line(Ada.Strings.Unbounded.To_String(line));
+         if debug_head then
+            Ada.Text_IO.Put_Line(Ada.Strings.Unbounded.To_String(line));
+         end if;
       end loop;
       --
       -- Check the request method and send proper response if not implemented.
@@ -286,5 +287,28 @@ package body bbs.http is
          end loop;
       end if;
    end read_headers;
+   --
+   --  Procedures and functions to get and set the debugging flags.
+   --
+   function get_debug_req return Boolean is
+   begin
+      return debug_req;
+   end get_debug_req;
+   --
+   function get_debug_head return Boolean is
+   begin
+      return debug_head;
+   end get_debug_head;
+   --
+   procedure set_debug_req(f : Boolean) is
+   begin
+      debug_req := f;
+   end set_debug_req;
+   --
+   procedure set_debug_head(f : Boolean) is
+   begin
+      debug_head := f;
+   end set_debug_head;
+   --
 
 end bbs.http;

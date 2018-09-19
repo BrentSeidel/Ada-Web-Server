@@ -4,7 +4,7 @@ with bbs.internal;
 with bbs.web_server;
 with bbs.web_common;
 
-procedure Main is
+procedure web is
    internal_map : bbs.web_common.proc_tables.Map;
    --
    --  Build the map for internal procedure calls.  The key strings must match
@@ -29,4 +29,4 @@ procedure Main is
 begin
    build_internal_map;
    bbs.web_server.server(internal_map, "config.txt", 31415);
-end Main;
+end web;

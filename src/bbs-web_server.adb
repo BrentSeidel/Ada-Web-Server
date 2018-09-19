@@ -53,6 +53,12 @@ package body bbs.web_server is
          --  available task.  In most cases, tasks should complete quickly and
          --  this should not be a big problem.
          --
+         if (debug) then
+            Ada.Text_IO.Put_Line(Integer'Image(bbs.web_common.counter) & " requests serviced, " &
+                                   Integer'Image(bbs.web_common.task_counter.read) &
+                                   " active tasks.");
+            Ada.Text_IO.Put_Line("Using server index " & Natural'Image(handler_index));
+         end if;
          handlers(handler_index).start(socket);
          handler_index := handler_index + 1;
          if handler_index > num_handlers then
@@ -201,5 +207,18 @@ package body bbs.web_server is
          bbs.web_common.task_counter.decrement;
       end loop;
    end request_handler;
+
+   --
+   --  Set and get value of debug flag;
+   --
+   function get_debug return Boolean is
+   begin
+      return debug;
+   end get_debug;
+   --
+   procedure set_debug(f : Boolean) is
+   begin
+      debug := f;
+   end set_debug;
 
 end bbs.web_server;

@@ -29,6 +29,12 @@ package bbs.web_server is
       entry end_task;
    end request_handler;
 
+   --
+   -- Set and get value of debug flag;
+   --
+   function get_debug return Boolean;
+   procedure set_debug(f : Boolean);
+
 private
    --
    --  Number of handler tasks to create.  The number is somewhat arbitrary and
@@ -40,5 +46,9 @@ private
    --  call.
    --
    internal_map : bbs.web_common.proc_tables.Map;
+   --
+   -- Flag to control display of debug messages
+   --
+   debug : Boolean := False; -- Display requests.
 
 end bbs.web_server;

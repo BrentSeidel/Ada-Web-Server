@@ -1,10 +1,10 @@
 with "../BBS-Ada/bbs.gpr";
 
-project Default is
+project Web is
 
    for Source_Dirs use ("src");
    for Object_Dir use "obj";
-   for Main use ("main.adb");
+   for Main use ("web.adb");
    for Exec_Dir use ".";
 
    package Pretty_Printer is
@@ -16,7 +16,7 @@ project Default is
    end Builder;
 
    package Compiler is
-      for Switches ("ada") use ("-gnatVa", "-g", "-gnato", "-fstack-check", "-gnat12", "-fcallgraph-info=su,da");
+      for Switches ("ada") use ("-gnatVa", "-g", "-gnato", "-fstack-check", "-gnat12");
    end Compiler;
 
    package Linker is
@@ -27,5 +27,5 @@ project Default is
       for Switches ("ada") use ("-r");
    end Binder;
 
-end Default;
+end Web;
 
