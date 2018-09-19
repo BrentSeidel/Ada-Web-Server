@@ -51,8 +51,8 @@ The software consists of a number of packages, each with a spec and a body.  See
   \label{fig:With}
 \end{figure}
 
-\subsection{\texttt{main.adb}}
-This is the main routine and it simply starts the web server.  If other initializations are needed, they could be added or called from here.
+\subsection{\texttt{web.adb}}
+This is the main routine.  It initializes the internal items table and starts the web server.  If other initializations are needed, they could be added or called from here.
 
 \subsection{\texttt{web\_common}}
 This package contains a number of items that are available for use in other packages.  Items are put here instead of in \texttt{web\_server} in order to avoid circular dependancies.  The primary item from \texttt{web\_common} that is expected to be used by user software is the \texttt{params} hash map.  The package is instantiated as follows:
@@ -144,7 +144,7 @@ This package contains routines to support HTTP.  Currently GET and POST methods 
 \end{itemize}
 
 \subsection{\texttt{internal}}
-This package contains routines to generate HTML or XML for internally generated items.  The generated HTML or XML is written to the \texttt{Stream\_Access} that needs to be passed in.  The proper HTTP headers also need to be written.  None of the routines in this package are required and can be changed around as needed.  They do provide some examples of how to generate items.  The internal routines can have access to parameters passed in the GET or POST request.  If no parameters were passed, the dictionary is empty.  The internal routines cannot distinguish between a GET or a POST request.  The visible routines are:
+This package contains routines to generate HTML or XML for internally generated items.  The generated HTML or XML is written to the \texttt{Stream\_Access} that needs to be passed in.  The proper HTTP headers also need to be written.  The routines in this package are only referenced (if referenced at all) from the internal items map.  They do provide some examples of how to generate items.  The internal routines can have access to parameters passed in the GET or POST request as well as the HTTP headers.  If no parameters were passed, the parameters dictionary is empty.  The visible routines are:
 \begin{itemize}
   \item \begin{verbatim}
 procedure xml_count(s : GNAT.Sockets.Stream_Access;
