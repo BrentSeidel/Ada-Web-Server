@@ -13,7 +13,8 @@ package bbs.web_common is
 
    --
    --  Record type containing a file name and a MIME type.  Used to identify
-   --  files to serve to the client.
+   --  files to serve to the client.  These are unbounded strings because Ada
+   --  doesn't let you use unconstrained Strings here.
    --
    type element is record
       file : Ada.Strings.Unbounded.Unbounded_String; -- File name
@@ -62,19 +63,22 @@ package bbs.web_common is
    --  Procedure to load the directory from a file.  Clears the directory map
    --  and then reads data from a file to load the directory.
    --
-   procedure load_directory(name : String);
+   procedure load_directory(name : String; map : out dictionary.Map)
+     with Global => Null;
    --
    --  Convert a single hex digit character to a number
    --
-   function hex_digit(c : Character) return Integer;
+   function hex_digit(c : Character) return Integer
+     with Global => Null,
+       Post => (hex_digit'Result >= 0 and hex_digit'Result <= 15);
    --
    --  URL Decode a string.
    --
-   function url_decode(s : String) return String;
+   function url_decode(s : String) return String
+     with Global => Null;
    --
    --  Common data.
    --
-   directory : dictionary.Map;
    CRLF : constant String := Ada.Characters.Latin_1.CR & Ada.Characters.Latin_1.LF;
    server_header : constant String := "Server: Custom Ada 2012 Server" & CRLF;
    --
@@ -82,7 +86,7 @@ package bbs.web_common is
    --
    counter : Integer := 0;
    --
-   --  A protected type for maintianing a counter of active request_handler
+   --  A protected type for maintaining a counter of active request_handler
    --  tasks.
    --
    protected type protected_counter is

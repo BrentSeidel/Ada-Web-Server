@@ -1,14 +1,47 @@
+with Ada.Strings.Unbounded;
+use type Ada.Strings.Unbounded.Unbounded_String;
 with Ada.Text_IO;
 with Ada.Text_IO.Unbounded_IO;
 with bbs.http;
-package body bbs.text is
+package body bbs.files is
+
+   --
+   --  Send the contents of the specified binary type file out to the client
+   --  program.  If the file can't be opened, a HTTP 404 NOT FOUND code is
+   --  returned instead of 200 OK.
+   --
+   --  Note that currently the file is sent byte by byte.  This is likely not
+   --  the most efficient way, but it works, and for now there is no need for
+   --  maximum performance.
+   --
+   procedure send_binary_with_headers(s : GNAT.Sockets.Stream_Access;
+                                    mime : String; name : String) is
+      buff : Character;
+      file : Char_IO.File_Type;
+   begin
+      begin
+         Char_IO.Open(File     => file,
+                          Mode     => Char_IO.In_File,
+                          Name     => name);
+      exception
+         when others =>
+            bbs.http.internal_error(s, name);
+            return;
+      end;
+      bbs.http.ok(s, mime);
+      while not Char_IO.End_Of_File(file) loop
+         Char_IO.Read(file, buff);
+         Character'Write(s, buff);
+      end loop;
+      Char_IO.Close(file);
+   end send_binary_with_headers;
 
    --
    --  Send the contents of the specified text type file out to the client
    --  program.  If the file can't be opened, a HTTP 404 NOT FOUND code is
    --  returned instead of 200 OK.
    --
-   procedure send_file_with_headers(s : GNAT.Sockets.Stream_Access;
+   procedure send_text_with_headers(s : GNAT.Sockets.Stream_Access;
                                     mime : String; name : String) is
       line : Ada.Strings.Unbounded.Unbounded_String;
       file : Ada.Text_IO.File_Type;
@@ -28,12 +61,12 @@ package body bbs.text is
          String'Write(s, Ada.Strings.Unbounded.To_String(line) & CRLF);
       end loop;
       Ada.Text_IO.Close(file);
-   end send_file_with_headers;
+   end send_text_with_headers;
    --
    --  This procedure sends a text file to the client with headers.  If the file
    --  cannot be opened, the procedure simply returns.
    --
-   procedure send_file_without_headers(s : GNAT.Sockets.Stream_Access;
+   procedure send_text_without_headers(s : GNAT.Sockets.Stream_Access;
                                     name : String) is
       line : Ada.Strings.Unbounded.Unbounded_String;
       file : Ada.Text_IO.File_Type;
@@ -51,6 +84,6 @@ package body bbs.text is
          String'Write(s, Ada.Strings.Unbounded.To_String(line) & CRLF);
       end loop;
       Ada.Text_IO.Close(file);
-   end send_file_without_headers;
+   end send_text_without_headers;
 
-end bbs.text;
+end bbs.files;

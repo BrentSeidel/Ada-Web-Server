@@ -20,7 +20,7 @@ procedure web is
       --
       internal_map.Insert("thermometer", bbs.svg.thermometer'Access);
       internal_map.Insert("dial", bbs.svg.dial'Access);
-      internal_map.Insert("configure", bbs.internal.html_show_config'Access);
+--      internal_map.Insert("configure", bbs.internal.html_show_config'Access);
       internal_map.Insert("target", bbs.internal.target'Access);
       internal_map.Insert("reload", bbs.internal.html_reload_config'Access);
       internal_map.Insert("counter", bbs.internal.xml_count'Access);

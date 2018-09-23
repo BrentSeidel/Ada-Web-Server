@@ -1,6 +1,3 @@
-With Ada.Strings;
-with Ada.Strings.Unbounded;
-use type Ada.Strings.Unbounded.Unbounded_String;
 with GNAT.Sockets;
 with bbs.web_common;
 --
@@ -14,12 +11,6 @@ package bbs.internal is
    procedure xml_count(s : GNAT.Sockets.Stream_Access;
                        h : bbs.web_common.params.Map;
                        p : bbs.web_common.params.Map);
-   --
-   --  Display the configuration data as a table.
-   --
-   procedure html_show_config(s : GNAT.Sockets.Stream_Access;
-                              h : bbs.web_common.params.Map;
-                              p : bbs.web_common.params.Map);
    --
    --  Display information sent in a form
    --

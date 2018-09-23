@@ -11,15 +11,18 @@ package bbs.html is
    --
    --  Generate a simple HTML heading
    --
-   procedure html_head(s : GNAT.Sockets.Stream_Access; title: String);
+   procedure html_head(s : GNAT.Sockets.Stream_Access; title: String)
+     with Global => (Input => bbs.web_common.CRLF);
    --
    --  Generate a simple HTML heading with style sheet
    --
-   procedure html_head(s : GNAT.Sockets.Stream_Access; title: String; style : String);
+   procedure html_head(s : GNAT.Sockets.Stream_Access; title: String; style : String)
+     with Global => (Input => bbs.web_common.CRLF);
    --
    --  Generate a standard HTML ending
    --
-   procedure html_end(s : GNAT.Sockets.Stream_Access; name: String);
+   procedure html_end(s : GNAT.Sockets.Stream_Access; name: String)
+     with Global => (Input => bbs.web_common.CRLF);
 
 private
    CRLF : String renames bbs.web_common.CRLF;

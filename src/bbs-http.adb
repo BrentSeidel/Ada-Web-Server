@@ -1,6 +1,7 @@
 with Ada.Characters.Latin_1;
 with Ada.Text_IO;
 package body bbs.http is
+   package ASU renames Ada.Strings.Unbounded; -- not the school
 
    --
    --  Return code 200 OK for normal cases
@@ -16,15 +17,16 @@ package body bbs.http is
    --
    --  Return code 200 OK for OPTIONS reqest cases
    --
-   procedure options_ok(s : GNAT.Sockets.Stream_Access; item : String) is
+   procedure options_ok(s : GNAT.Sockets.Stream_Access; item : String;
+                        dir : bbs.web_common.dictionary.Map) is
    begin
       String'Write(s, "HTTP/1.0 200 OK" & CRLF);
       if item = "*" then
          String'Write(s, "Allow: OPTIONS, GET, POST" & CRLF);
-      elsif bbs.web_common.directory.Contains(item) then
+      elsif dir.Contains(item) then
          declare
-            el : constant bbs.web_common.element := bbs.web_common.directory.Element(item);
-            mime : constant String := Ada.Strings.Unbounded.To_String(el.mime);
+            el : constant bbs.web_common.element := dir.Element(item);
+            mime : constant String := ASU.To_String(el.mime);
          begin
             if mime = "internal" then
                String'Write(s, "Allow: OPTIONS, GET, POST" & CRLF);
@@ -119,7 +121,7 @@ package body bbs.http is
          str := str & c;
          exit when c = Ada.Characters.Latin_1.LF;
       end loop;
-      return Ada.Strings.Unbounded.Head(str, Ada.Strings.Unbounded.Length(str) - 2);
+      return Ada.Strings.Unbounded.Head(str, ASU.Length(str) - 2);
    end get_line_from_stream;
    --
    --  Read a specified number of characters from an input stream.  This is
@@ -143,15 +145,16 @@ package body bbs.http is
    --
    procedure read_headers(s : GNAT.Sockets.Stream_Access;
                           method : out request_type;
-                          item : out Ada.Strings.Unbounded.Unbounded_String;
+                          item : out ASU.Unbounded_String;
                           headers : in out bbs.web_common.params.Map;
-                          params : in out bbs.web_common.params.Map) is
-      param_string : Ada.Strings.Unbounded.Unbounded_String := Ada.Strings.Unbounded.Null_Unbounded_String;
+                          params : in out bbs.web_common.params.Map;
+                          dir : bbs.web_common.dictionary.Map) is
+      param_string : ASU.Unbounded_String := ASU.Null_Unbounded_String;
       length : Natural;
-      line  : Ada.Strings.Unbounded.Unbounded_String;
-      req   : Ada.Strings.Unbounded.Unbounded_String;
-      temp1 : Ada.Strings.Unbounded.Unbounded_String;
-      temp2 : Ada.Strings.Unbounded.Unbounded_String;
+      line  : ASU.Unbounded_String;
+      req   : ASU.Unbounded_String;
+      temp1 : ASU.Unbounded_String;
+      temp2 : ASU.Unbounded_String;
       index : Natural;
    begin
       --
@@ -159,12 +162,11 @@ package body bbs.http is
       --
       line := get_line_from_stream(s);
       if debug_req then
-         Ada.Text_IO.Put_Line(Ada.Strings.Unbounded.To_String(line));
+         Ada.Text_IO.Put_Line(ASU.To_String(line));
       end if;
-      index := Ada.Strings.Unbounded.Index(line, " ");
-      req := Ada.Strings.Unbounded.Head(line, index - 1);
-      line := Ada.Strings.Unbounded.Tail(line,
-                                         Ada.Strings.Unbounded.Length(line) - index);
+      index := ASU.Index(line, " ");
+      req := ASU.Head(line, index - 1);
+      line := ASU.Tail(line, ASU.Length(line) - index);
       if req = "CONNECT" then
          method := CONNECT;
       elsif req = "DELETE" then
@@ -189,14 +191,13 @@ package body bbs.http is
       --
       -- Parse out the requested item.  Don't care about the HTTP version
       --
-      index := Ada.Strings.Unbounded.Index(line, " ");
+      index := ASU.Index(line, " ");
       if index > 0 then
-         item := Ada.Strings.Unbounded.Head(line, index - 1);
-         line := Ada.Strings.Unbounded.Tail(line,
-                                            Ada.Strings.Unbounded.Length(line) - index);
+         item := ASU.Head(line, index - 1);
+         line := ASU.Tail(line, ASU.Length(line) - index);
       else
          item := line;
-         line := Ada.Strings.Unbounded.Null_Unbounded_String;
+         line := ASU.Null_Unbounded_String;
       end if;
       --
       -- Scan through the rest of the headers.  If needed, the content-length
@@ -204,13 +205,12 @@ package body bbs.http is
       --
       loop
          line := get_line_from_stream(s);
-         exit when Ada.Strings.Unbounded.Length(line) = 0;
-         index := Ada.Strings.Unbounded.Index(line, " ");
-         temp1 := Ada.Strings.Unbounded.Head(line, index - 1);
-         temp2 := Ada.Strings.Unbounded.Tail(line,
-                                            Ada.Strings.Unbounded.Length(line) - index);
-         headers.Insert(Key      => Ada.Strings.Unbounded.To_String(temp1),
-                        New_Item => Ada.Strings.Unbounded.To_String(temp2));
+         exit when ASU.Length(line) = 0;
+         index := ASU.Index(line, " ");
+         temp1 := ASU.Head(line, index - 1);
+         temp2 := ASU.Tail(line, ASU.Length(line) - index);
+         headers.Insert(Key      => ASU.To_String(temp1),
+                        New_Item => ASU.To_String(temp2));
          --
          -- If this is a POST request, we need to find the Content-Length:
          -- header and determine the length.  To be strictly correct, the
@@ -218,11 +218,11 @@ package body bbs.http is
          --
          if method = POST then
             if (temp1 = "Content-Length:") then
-               length := Natural'Value(Ada.Strings.Unbounded.To_String(temp2));
+               length := Natural'Value(ASU.To_String(temp2));
             end if;
          end if;
          if debug_head then
-            Ada.Text_IO.Put_Line(Ada.Strings.Unbounded.To_String(line));
+            Ada.Text_IO.Put_Line(ASU.To_String(line));
          end if;
       end loop;
       --
@@ -234,11 +234,10 @@ package body bbs.http is
             -- If a GET request, check to see if parameters are attached
             --
             line := item;
-            index := Ada.Strings.Unbounded.Index(line, "?");
+            index := ASU.Index(line, "?");
             if index > 0 then
-               item := Ada.Strings.Unbounded.Head(line, index - 1);
-               param_string := Ada.Strings.Unbounded.Tail(line,
-                                                  Ada.Strings.Unbounded.Length(line) - index);
+               item := ASU.Head(line, index - 1);
+               param_string := ASU.Tail(line, ASU.Length(line) - index);
             end if;
          when POST =>
             --
@@ -246,40 +245,38 @@ package body bbs.http is
             --
             param_string := get_data_from_stream(s, length);
          when OPTIONS =>
-            options_ok(s, Ada.Strings.Unbounded.To_String(item));
+            options_ok(s, ASU.To_String(item), dir);
          when others =>
-            not_implemented_req(s, Ada.Strings.Unbounded.To_String(req));
+            not_implemented_req(s, ASU.To_String(req));
       end case;
       --
       -- If there are parameters, process them and store them in a parameter
       -- dictionary.
       --
-      if (param_string /= Ada.Strings.Unbounded.Null_Unbounded_String) then
-         while (Ada.Strings.Unbounded.Length(param_string) > 0) loop
+      if (param_string /= ASU.Null_Unbounded_String) then
+         while (ASU.Length(param_string) > 0) loop
             --
             -- First split off a key value pair.  They are separated by '&'.
             --
-            index := Ada.Strings.Unbounded.Index(param_string, "&");
+            index := ASU.Index(param_string, "&");
             if index > 0 then
-               temp1 := Ada.Strings.Unbounded.Head(param_string, index - 1);
-               param_string := Ada.Strings.Unbounded.Tail(param_string,
-                                                          Ada.Strings.Unbounded.Length(param_string) - index);
+               temp1 := ASU.Head(param_string, index - 1);
+               param_string := ASU.Tail(param_string, ASU.Length(param_string) - index);
             else
                temp1 := param_string;
-               param_string := Ada.Strings.Unbounded.Null_Unbounded_String;
+               param_string := ASU.Null_Unbounded_String;
             end if;
             --
             -- Split the key-value pair into separate key and values and store
             -- them in the params map.  At this point, the value could be URL
             -- decoded.
             --
-            index := Ada.Strings.Unbounded.Index(temp1, "=");
+            index := ASU.Index(temp1, "=");
             declare
-               key : constant String := Ada.Strings.Unbounded.To_String(
-                                                     Ada.Strings.Unbounded.Head(temp1, index - 1));
-               value : constant String := bbs.web_common.url_decode(Ada.Strings.Unbounded.To_String(
-                                                       Ada.Strings.Unbounded.Tail(temp1,
-                                                          Ada.Strings.Unbounded.Length(temp1) - index)));
+               key : constant String := ASU.To_String(ASU.Head(temp1, index - 1));
+               value : constant String := bbs.web_common.url_decode(ASU.To_String(
+                                                       ASU.Tail(temp1,
+                                                          ASU.Length(temp1) - index)));
             begin
                params.Insert(Key      => key,
                              New_Item => value);

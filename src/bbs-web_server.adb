@@ -1,10 +1,11 @@
 with Ada.Text_IO;
-with bbs.text;
-with bbs.binary;
+with bbs.files;
+--with bbs.binary;
 with bbs.http;
 use type bbs.http.request_type;
 
 package body bbs.web_server is
+   package ASU renames Ada.Strings.Unbounded; -- not the school
    --
    --  This is the web server.  In initializes the network interface and enters
    --  an infinite loop processing requests.
@@ -17,13 +18,14 @@ package body bbs.web_server is
       socket : GNAT.Sockets.Socket_Type; -- Socket for responding.
       handlers : array (1 .. num_handlers) of request_handler;
       handler_index : Natural := 1;
+      internal_map : constant bbs.web_common.proc_tables.Map := internals;
+      directory : bbs.web_common.dictionary.Map;
    begin
-      bbs.web_common.load_directory(config_name);
-      internal_map := internals;
       --
       --  Do a bunch of initialization stuff.  We want to listen on any
       --  interface to the specified port.  The socket is IPv4 TCP/IP.
       --
+      bbs.web_common.load_directory(config_name, directory);
       local.Addr := GNAT.Sockets.Any_Inet_Addr;
       local.Port := port;
       GNAT.Sockets.Create_Socket(sock1, GNAT.Sockets.Family_Inet,
@@ -38,10 +40,17 @@ package body bbs.web_server is
       --
       GNAT.Sockets.Listen_Socket(sock1);
       loop
+         --
+         --  Check if the configuration needs to be reloaded.
+         --
          if bbs.web_common.reload_configuration then
-            bbs.web_common.load_directory("config.txt");
+            bbs.web_common.load_directory("config.txt", directory);
             bbs.web_common.reload_configuration := False;
          end if;
+         --
+         --  This call blocks until a connection request comes in.  Once a
+         --  request comes, increment the counter of requests handled.
+         --
          GNAT.Sockets.Accept_Socket(sock1, socket, local);
          bbs.web_common.counter := bbs.web_common.counter + 1;
          --
@@ -59,7 +68,7 @@ package body bbs.web_server is
                                    " active tasks.");
             Ada.Text_IO.Put_Line("Using server index " & Natural'Image(handler_index));
          end if;
-         handlers(handler_index).start(socket);
+         handlers(handler_index).start(socket, internal_map, directory);
          handler_index := handler_index + 1;
          if handler_index > num_handlers then
             handler_index := 1;
@@ -76,23 +85,28 @@ package body bbs.web_server is
    --
    --  Handle the details of the http request.  This is done as a task.  Once a
    --  network connection is made, the stream for that connection is handed off
-   --  to a task which processes the request, runs to completion, and then
-   --  exits.
+   --  to a task which processes the request and then waits for the next one.
    --
    task body request_handler is
-      item : Ada.Strings.Unbounded.Unbounded_String;
-      headers : bbs.web_common.params.Map;
+      internal_map : bbs.web_common.proc_tables.Map;
+      directory : bbs.web_common.dictionary.Map;
+      sock : GNAT.Sockets.Socket_Type;
+      item : ASU.Unbounded_String;
       req : bbs.http.request_type;
+      headers : bbs.web_common.params.Map;
       el : bbs.web_common.element;
       param : bbs.web_common.params.Map;
       s : GNAT.Sockets.Stream_Access;
-      sock : GNAT.Sockets.Socket_Type;
       exit_flag : Boolean := False;
    begin
       loop
          select
-            accept start(socket : GNAT.Sockets.Socket_Type) do
+            accept start(socket : GNAT.Sockets.Socket_Type;
+                         internals : bbs.web_common.proc_tables.Map;
+                         dir : bbs.web_common.dictionary.Map) do
                sock := socket;
+               internal_map := internals;
+               directory := dir;
             end start;
          or
             accept end_task do
@@ -110,21 +124,21 @@ package body bbs.web_server is
          --
          param.Clear;
          headers.Clear;
-         bbs.http.read_headers(s, req, item, headers, param);
+         bbs.http.read_headers(s, req, item, headers, param, directory);
          --
-         --  Check the request type.  If the type is Other, a request type not
-         --  implemented response has already been sent.
+         --  Check the request type.  If the type is other than GET or POST, a
+         --  response has already been sent.
          --
          case req is
             when bbs.http.GET =>
                --
                --  Check if the requested item is in the directory.
                --
-               if bbs.web_common.directory.Contains(Ada.Strings.Unbounded.To_String(item)) then
-                  el := bbs.web_common.directory.Element(Ada.Strings.Unbounded.To_String(item));
+               if directory.Contains(ASU.To_String(item)) then
+                  el := directory.Element(ASU.To_String(item));
                   declare
-                     name : constant String := Ada.Strings.Unbounded.To_String(el.file);
-                     mime : constant String := Ada.Strings.Unbounded.To_String(el.mime);
+                     name : constant String := ASU.To_String(el.file);
+                     mime : constant String := ASU.To_String(el.mime);
                   begin
                      --
                      --  The following mime types should be supported:
@@ -149,12 +163,12 @@ package body bbs.web_server is
                         --
                         --  Send an text type file with the proper mime type.
                         --
-                        bbs.text.send_file_with_headers(s, mime, name);
+                        bbs.files.send_text_with_headers(s, mime, name);
                      elsif (mime = "image/jpeg") or (mime = "image/png") then
                         --
                         --  Send a binary file with the proper mime type.
                         --
-                        bbs.binary.send_file_with_headers(s, mime, name);
+                        bbs.files.send_binary_with_headers(s, mime, name);
                      elsif mime = "internal" then
                         if internal_map.Contains(name) then
                            internal_map.Element(name)(s, headers, param);
@@ -168,7 +182,7 @@ package body bbs.web_server is
                      end if;
                   end;
                else
-                  bbs.http.not_found(s, Ada.Strings.Unbounded.To_String(item));
+                  bbs.http.not_found(s, ASU.To_String(item));
                end if;
             when bbs.http.POST =>
                --
@@ -176,11 +190,11 @@ package body bbs.web_server is
                --
                --  Check if the requested item is in the directory.
                --
-               if bbs.web_common.directory.Contains(Ada.Strings.Unbounded.To_String(item)) then
-                  el := bbs.web_common.directory.Element(Ada.Strings.Unbounded.To_String(item));
+               if directory.Contains(ASU.To_String(item)) then
+                  el := directory.Element(ASU.To_String(item));
                   declare
-                     name : constant String := Ada.Strings.Unbounded.To_String(el.file);
-                     mime : constant String := Ada.Strings.Unbounded.To_String(el.mime);
+                     name : constant String := ASU.To_String(el.file);
+                     mime : constant String := ASU.To_String(el.mime);
                   begin
                      if mime = "internal" then
                         if internal_map.Contains(name) then
@@ -195,7 +209,7 @@ package body bbs.web_server is
                      end if;
                   end;
                else
-                  bbs.http.not_found(s, Ada.Strings.Unbounded.To_String(item));
+                  bbs.http.not_found(s, ASU.To_String(item));
                end if;
             when others => -- Handled in HTTP package
                null;

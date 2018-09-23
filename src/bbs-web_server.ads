@@ -25,7 +25,9 @@ package bbs.web_server is
    --  another request.  The end_task entry is used to terminate the task.
    --
    task type request_handler is
-      entry start(socket : GNAT.Sockets.Socket_Type);
+      entry start(socket : GNAT.Sockets.Socket_Type;
+                  internals : bbs.web_common.proc_tables.Map;
+                  dir : bbs.web_common.dictionary.Map);
       entry end_task;
    end request_handler;
 
@@ -41,11 +43,6 @@ private
    --  should be based on the expected load.
    --
    num_handlers : constant Natural := 10;
-   --
-   --  Map to translate names of internal items to the procedures to actually
-   --  call.
-   --
-   internal_map : bbs.web_common.proc_tables.Map;
    --
    -- Flag to control display of debug messages
    --

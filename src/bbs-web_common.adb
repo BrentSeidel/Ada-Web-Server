@@ -1,6 +1,7 @@
 with Ada.Text_IO;
 with Ada.Text_IO.Unbounded_IO;
 package body bbs.web_common is
+   package ASU renames Ada.Strings.Unbounded; -- not the school
 
    --
    --  A protected type for maintianing a counter of active request_handler
@@ -42,16 +43,16 @@ package body bbs.web_common is
    --  Comments can be added.  A comment is indicated by a '#' character at the
    --  start of a line.  Everything through the end of that line is ignored.
    --
-   procedure load_directory(name : String) is
+   procedure load_directory(name : String; map : out dictionary.Map) is
+      location : ASU.Unbounded_String;
       file : Ada.Text_IO.File_Type;
-      line : Ada.Strings.Unbounded.Unbounded_String;
-      item : Ada.Strings.Unbounded.Unbounded_String;
-      location : Ada.Strings.Unbounded.Unbounded_String;
-      mime : Ada.Strings.Unbounded.Unbounded_String;
+      line : ASU.Unbounded_String;
+      item : ASU.Unbounded_String;
+      mime : ASU.Unbounded_String;
       space : Natural;
       el : element;
    begin
-      directory.Clear;
+      map.Clear;
       Ada.Text_IO.Open(File     => file,
                        Mode     => Ada.Text_IO.In_File,
                        Name     => name);
@@ -60,24 +61,22 @@ package body bbs.web_common is
          --
          --  Check for comment.  First character is '#'.
          --
-         if (Ada.Strings.Unbounded.Element(line, 1) /= '#') then
+         if (ASU.Element(line, 1) /= '#') then
             --
             --  Parse out the item
             --
-            space := Ada.Strings.Unbounded.Index(line, " ");
-            item := Ada.Strings.Unbounded.Head(line, space - 1);
-            line := Ada.Strings.Unbounded.Tail(line,
-                                               Ada.Strings.Unbounded.Length(line) - space);
+            space := ASU.Index(line, " ");
+            item := ASU.Head(line, space - 1);
+            line := ASU.Tail(line, ASU.Length(line) - space);
             --
             --  Parse out the location and MIME type
             --
-            space := Ada.Strings.Unbounded.Index(line, " ");
-            location := Ada.Strings.Unbounded.Head(line, space - 1);
-            mime := Ada.Strings.Unbounded.Tail(line,
-                                               Ada.Strings.Unbounded.Length(line) - space);
+            space := ASU.Index(line, " ");
+            location := ASU.Head(line, space - 1);
+            mime := ASU.Tail(line, ASU.Length(line) - space);
             el.file := location;
             el.mime := mime;
-            directory.Insert(Ada.Strings.Unbounded.To_String(item), el);
+            map.Insert(ASU.To_String(item), el);
          end if;
       end loop;
       Ada.Text_IO.Close(file);
@@ -130,7 +129,7 @@ package body bbs.web_common is
    --  URL Decode a string.
    --
    function url_decode(s : String) return String is
-      t : Ada.Strings.Unbounded.Unbounded_String := Ada.Strings.Unbounded.Null_Unbounded_String;
+      t : ASU.Unbounded_String := ASU.Null_Unbounded_String;
       i : Natural := 1;
       c : Character;
       v : Integer;
@@ -149,7 +148,7 @@ package body bbs.web_common is
          i := i + 1;
          t := t & c;
       end loop;
-      return Ada.Strings.Unbounded.To_String(t);
+      return ASU.To_String(t);
    end url_decode;
 
 end bbs.web_common;

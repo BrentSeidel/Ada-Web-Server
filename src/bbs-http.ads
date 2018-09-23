@@ -13,24 +13,28 @@ package bbs.http is
    type request_type is (CONNECT, DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT,
                          TRACE, Other);
    --
-   -- Return code 200 OK for normal cases
+   --  Return code 200 OK for normal cases
    --
-   procedure ok(s : GNAT.Sockets.Stream_Access; txt: String);
+   procedure ok(s : GNAT.Sockets.Stream_Access; txt: String)
+     with Global => (Input => (bbs.web_common.CRLF, bbs.web_common.server_header));
    --
    -- Return code 404 NOT FOUND for when the requested item is not in the
    -- directory.
    --
-   procedure not_found(s : GNAT.Sockets.Stream_Access; item: String);
+   procedure not_found(s : GNAT.Sockets.Stream_Access; item: String)
+     with Global => (Input => (bbs.web_common.CRLF, bbs.web_common.server_header));
    --
    -- Return code 500 INTERNAL SERVER ERROR generally when unable to open the
    -- file for the specified item.
    --
-   procedure internal_error(s : GNAT.Sockets.Stream_Access; file: String);
+   procedure internal_error(s : GNAT.Sockets.Stream_Access; file: String)
+     with Global => (Input => (bbs.web_common.CRLF, bbs.web_common.server_header));
    --
    -- Return code 501 NOT IMPLEMENTED for a request for an internally generated
    -- item that is not yet implemented..
    --
-   procedure not_implemented_int(s : GNAT.Sockets.Stream_Access; item: String);
+   procedure not_implemented_int(s : GNAT.Sockets.Stream_Access; item: String)
+     with Global => (Input => (bbs.web_common.CRLF, bbs.web_common.server_header));
    --
    -- The read_headers procedure will need to handle both GET and POST request
    -- as well as return the passed parameters.  Returned values will be the
@@ -41,7 +45,9 @@ package bbs.http is
                           method : out request_type;
                           item : out Ada.Strings.Unbounded.Unbounded_String;
                           headers : in out bbs.web_common.params.Map;
-                          params : in out bbs.web_common.params.Map);
+                          params : in out bbs.web_common.params.Map;
+                          dir : bbs.web_common.dictionary.Map)
+     with Global => Null;
    --
    -- Procedures and functions to get and set the debugging flags.
    --
@@ -61,21 +67,26 @@ private
    --
    -- Return code 200 OK for OPTIONS reqest cases
    --
-   procedure options_ok(s : GNAT.Sockets.Stream_Access; item : String);
+   procedure options_ok(s : GNAT.Sockets.Stream_Access; item : String;
+                        dir : bbs.web_common.dictionary.Map)
+     with Global => (Input => (bbs.web_common.CRLF, bbs.web_common.server_header));
    --
    -- Return code 501 NOT IMPLEMENTED for any unsupported request.  This is
    -- generated internal to the http package.
    --
-   procedure not_implemented_req(s : GNAT.Sockets.Stream_Access; req: String);
+   procedure not_implemented_req(s : GNAT.Sockets.Stream_Access; req: String)
+     with Global => (Input => (bbs.web_common.CRLF, bbs.web_common.server_header));
    --
    -- Read a line from the HTTP request stream
    --
    function get_line_from_stream(s : GNAT.Sockets.Stream_Access)
-                                 return Ada.Strings.Unbounded.Unbounded_String;
+                                 return Ada.Strings.Unbounded.Unbounded_String
+     with Global => Null;
    --
    -- Read a specified number of characters from the HTTP request stream
    --
    function get_data_from_stream(s : GNAT.Sockets.Stream_Access; len : Natural)
-                                 return Ada.Strings.Unbounded.Unbounded_String;
+                                 return Ada.Strings.Unbounded.Unbounded_String
+     with Global => Null;
 
 end bbs.http;
