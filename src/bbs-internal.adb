@@ -10,7 +10,8 @@ package body bbs.internal is
                        p : bbs.web_common.params.Map) is
    begin
       bbs.http.ok(s, "application/xml");
-      String'Write(s, "<xml><counter>" & Integer'Image(bbs.web_common.task_counter.read) &
+      String'Write(s, "<xml><tasks>" & Integer'Image(bbs.web_common.task_counter.read) &
+                     "</tasks><counter>" & Integer'Image(bbs.web_common.counter) &
                      "</counter></xml>" & CRLF);
    end xml_count;
 

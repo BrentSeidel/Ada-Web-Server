@@ -1,5 +1,8 @@
 with Ada.Characters.Latin_1;
 with Ada.Text_IO;
+with Ada.Streams;
+use type Ada.Streams.Stream_Element_Offset;
+
 package body bbs.http is
    package ASU renames Ada.Strings.Unbounded; -- not the school
 
@@ -106,18 +109,37 @@ package body bbs.http is
    --  The CR-LF is stripped from the return string as it can just be assumed to
    --  be there.
    --
-   function get_line_from_stream(s : GNAT.Sockets.Stream_Access)
+   --  *** There is a potential problem using Character'Input().  No
+   --  *** notification is given should the stream be closed while waiting for
+   --  *** input.  If this happens, the task will hang.  This is an easy
+   --  *** opportunity for a denial of service attack.  This has been addressed
+   --  *** by using GNAT.Sockets.Receive_Socket instead which can indicate a
+   --  *** socket closure by the value of last.  Should this be detected, an
+   --  *** Ada.Text_IO.End_Error (perhaps not the best choice) is raised and
+   --  *** further input is abandoned.
+   --
+   function get_line_from_stream(s : GNAT.Sockets.Socket_Type)
                                  return Ada.Strings.Unbounded.Unbounded_String is
       c : Character;
+      last : Ada.Streams.Stream_Element_Offset;
+      elem : Ada.Streams.Stream_Element_Array(1 .. 1);
       str : Ada.Strings.Unbounded.Unbounded_String;
    begin
       loop
          loop
-            c := Character'Input(s);
+            GNAT.Sockets.Receive_Socket(s, elem, last);
+            if last = 0 then
+               raise Ada.Text_IO.End_Error;
+            end if;
+            c := Character'Val(elem(1));
             str := str & c;
             exit when c = Ada.Characters.Latin_1.CR;
          end loop;
-         c := Character'Input(s);
+         GNAT.Sockets.Receive_Socket(s, elem, last);
+         if last = 0 then
+            raise Ada.Text_IO.End_Error;
+         end if;
+         c := Character'Val(elem(1));
          str := str & c;
          exit when c = Ada.Characters.Latin_1.LF;
       end loop;
@@ -129,13 +151,19 @@ package body bbs.http is
    --  content-length header needs to be parsed and that number of characters
    --  read at the end.
    --
-   function get_data_from_stream(s : GNAT.Sockets.Stream_Access; len : Natural)
+   function get_data_from_stream(s : GNAT.Sockets.Socket_Type; len : Natural)
                                  return Ada.Strings.Unbounded.Unbounded_String is
       c : Character;
+      last : Ada.Streams.Stream_Element_Offset;
+      elem : Ada.Streams.Stream_Element_Array(1 .. 1);
       str : Ada.Strings.Unbounded.Unbounded_String;
    begin
       for i in Natural range 1 .. len loop
-         c := Character'Input(s);
+         GNAT.Sockets.Receive_Socket(s, elem, last);
+         if last = 0 then
+            raise Ada.Text_IO.End_Error;
+         end if;
+         c := Character'Val(elem(1));
          str := str & c;
       end loop;
       return str;
@@ -144,6 +172,7 @@ package body bbs.http is
    --  Read the headers from the request..
    --
    procedure read_headers(s : GNAT.Sockets.Stream_Access;
+                          sock : GNAT.Sockets.Socket_Type;
                           method : out request_type;
                           item : out ASU.Unbounded_String;
                           headers : in out bbs.web_common.params.Map;
@@ -157,10 +186,12 @@ package body bbs.http is
       temp2 : ASU.Unbounded_String;
       index : Natural;
    begin
+      params.Clear;
+      headers.Clear;
       --
       --  The first line contains the request.  Parse it out.
       --
-      line := get_line_from_stream(s);
+      line := get_line_from_stream(sock);
       if debug_req then
          Ada.Text_IO.Put_Line(ASU.To_String(line));
       end if;
@@ -204,7 +235,7 @@ package body bbs.http is
       -- header is parsed.
       --
       loop
-         line := get_line_from_stream(s);
+         line := get_line_from_stream(sock);
          exit when ASU.Length(line) = 0;
          index := ASU.Index(line, " ");
          temp1 := ASU.Head(line, index - 1);
@@ -243,7 +274,7 @@ package body bbs.http is
             --
             -- If the method is post, the parameters will be read here.
             --
-            param_string := get_data_from_stream(s, length);
+            param_string := get_data_from_stream(sock, length);
          when OPTIONS =>
             options_ok(s, ASU.To_String(item), dir);
          when others =>

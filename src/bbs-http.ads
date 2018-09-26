@@ -1,4 +1,3 @@
-with Ada.Strings;
 with Ada.Strings.Unbounded;
 use type Ada.Strings.Unbounded.Unbounded_String;
 with GNAT.Sockets;
@@ -42,6 +41,7 @@ package bbs.http is
    -- no parameters, the dictionary will be empty.
    --
    procedure read_headers(s : GNAT.Sockets.Stream_Access;
+                          sock : GNAT.Sockets.Socket_Type;
                           method : out request_type;
                           item : out Ada.Strings.Unbounded.Unbounded_String;
                           headers : in out bbs.web_common.params.Map;
@@ -79,13 +79,13 @@ private
    --
    -- Read a line from the HTTP request stream
    --
-   function get_line_from_stream(s : GNAT.Sockets.Stream_Access)
+   function get_line_from_stream(s : GNAT.Sockets.Socket_Type)
                                  return Ada.Strings.Unbounded.Unbounded_String
      with Global => Null;
    --
    -- Read a specified number of characters from the HTTP request stream
    --
-   function get_data_from_stream(s : GNAT.Sockets.Stream_Access; len : Natural)
+   function get_data_from_stream(s : GNAT.Sockets.Socket_Type; len : Natural)
                                  return Ada.Strings.Unbounded.Unbounded_String
      with Global => Null;
 

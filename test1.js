@@ -44,8 +44,28 @@ function loadCounter()
 function displayCounter(xml)
 {
   var xmlDoc = xml.responseXML;
-  var x = xmlDoc.getElementsByTagName("counter")[0].childNodes[0].nodeValue;
-  document.getElementById("count").innerHTML = x + " transactions have been processed";
+  var count = xmlDoc.getElementsByTagName("counter")[0].childNodes[0].nodeValue;
+  var task = xmlDoc.getElementsByTagName("tasks")[0].childNodes[0].nodeValue;
+  var text;
+
+  if (task == 1)
+  {
+    text = task + " Thread active.<br>";
+  }
+  else
+  {
+    text = task + " Threads active.<br>";
+  }
+
+  if (count == 1)
+  {
+    text += count + " Request served.<br>";
+  }
+  else
+  {
+    text += count + " Requests served.<br>";
+  }
+  document.getElementById("count").innerHTML = text;
 }
 //
 // Global values for some timer related functions.

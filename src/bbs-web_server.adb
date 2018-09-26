@@ -1,6 +1,5 @@
 with Ada.Text_IO;
 with bbs.files;
---with bbs.binary;
 with bbs.http;
 use type bbs.http.request_type;
 
@@ -14,8 +13,8 @@ package body bbs.web_server is
                     config_name : String;
                     port : GNAT.Sockets.Port_Type) is
       local : GNAT.Sockets.Sock_Addr_Type;
-      sock1 : GNAT.Sockets.Socket_Type;  -- Socket for receiving requests
-      socket : GNAT.Sockets.Socket_Type; -- Socket for responding.
+      sock_rx : GNAT.Sockets.Socket_Type;  --  Socket for receiving requests
+      sock_tx : GNAT.Sockets.Socket_Type;  --  Socket for responding to requests
       handlers : array (1 .. num_handlers) of request_handler;
       handler_index : Natural := 1;
       internal_map : constant bbs.web_common.proc_tables.Map := internals;
@@ -28,17 +27,17 @@ package body bbs.web_server is
       bbs.web_common.load_directory(config_name, directory);
       local.Addr := GNAT.Sockets.Any_Inet_Addr;
       local.Port := port;
-      GNAT.Sockets.Create_Socket(sock1, GNAT.Sockets.Family_Inet,
+      GNAT.Sockets.Create_Socket(sock_rx, GNAT.Sockets.Family_Inet,
                                  GNAT.Sockets.Socket_Stream);
-      GNAT.Sockets.Set_Socket_Option(sock1, GNAT.Sockets.Socket_Level,
+      GNAT.Sockets.Set_Socket_Option(sock_rx, GNAT.Sockets.Socket_Level,
                                      (GNAT.Sockets.Reuse_Address, True));
-      GNAT.Sockets.Bind_Socket(sock1, local);
+      GNAT.Sockets.Bind_Socket(sock_rx, local);
       --
       --  Once the socket is configured.  Listen on it and accept a connection.
       --  once the connection is made, read from it and write back a response.
       --  Then close the sockets and exit.
       --
-      GNAT.Sockets.Listen_Socket(sock1);
+      GNAT.Sockets.Listen_Socket(sock_rx);
       loop
          --
          --  Check if the configuration needs to be reloaded.
@@ -51,7 +50,7 @@ package body bbs.web_server is
          --  This call blocks until a connection request comes in.  Once a
          --  request comes, increment the counter of requests handled.
          --
-         GNAT.Sockets.Accept_Socket(sock1, socket, local);
+         GNAT.Sockets.Accept_Socket(sock_rx, sock_tx, local);
          bbs.web_common.counter := bbs.web_common.counter + 1;
          --
          --  Handlers contains a array of num_handlers tasks.  As requests come
@@ -68,7 +67,7 @@ package body bbs.web_server is
                                    " active tasks.");
             Ada.Text_IO.Put_Line("Using server index " & Natural'Image(handler_index));
          end if;
-         handlers(handler_index).start(socket, internal_map, directory);
+         handlers(handler_index).start(sock_tx, internal_map, directory);
          handler_index := handler_index + 1;
          if handler_index > num_handlers then
             handler_index := 1;
@@ -122,9 +121,21 @@ package body bbs.web_server is
          --  should be handled.  POST requests will need to be able to handle
          --  passed parameters so that forms can be processed.
          --
-         param.Clear;
-         headers.Clear;
-         bbs.http.read_headers(s, req, item, headers, param, directory);
+         begin
+            bbs.http.read_headers(s, sock, req, item, headers, param, directory);
+         exception
+               --
+               --  If the remote end of the socket is closed while reading the
+               --  headers, an Ada.Text_IO.End_Error exception is thrown and
+               --  further processing is abandoned.  The handler sets the
+               --  request type to bbs.http.Other which is not proceesed.  The
+               --  normal cleanup is done and the task loops to wait for another
+               --  request.
+               --
+            when Ada.Text_IO.End_Error =>
+               Ada.Text_IO.Put_Line("Socket unexpectedly closed.");
+               req := bbs.http.Other;
+         end;
          --
          --  Check the request type.  If the type is other than GET or POST, a
          --  response has already been sent.
@@ -186,7 +197,7 @@ package body bbs.web_server is
                end if;
             when bbs.http.POST =>
                --
-               --  Post requests will only work on internal type files.
+               --  POST requests will only work on internal type files.
                --
                --  Check if the requested item is in the directory.
                --

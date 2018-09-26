@@ -27,7 +27,7 @@ This document describes the configuration of and modifications to the Ada web se
 Note: As part of a restructuring, all packages have been prefixed with \texttt{bbs.}  This is part of an effort to allow the code to be used as a library instead of being integrated into the target application.
 
 \section{Installation}
-This repository is stand alone and can be installed without any other repositories.  It is written in Ada 2012 and built using the GNAT Ada tool set.  The following Ada packages are used in various places throughout the system:
+This repository depends on the BBS-Ada repository because of the \texttt{bbs.} prefix.  It is written in Ada 2012 and built using the GNAT Ada tool set.  The following Ada packages are used in various places throughout the system:
 \begin{itemize}
   \item \verb|Ada.Characters.Latin_1|
   \item \verb|Ada.Containers.Indefinite_Hashed_Maps|
@@ -201,27 +201,23 @@ procedure dial(s : GNAT.Sockets.Stream_Access;
   The value is clamped to be between \texttt{min} and \texttt{max}.  If any exceptions occur in parsing the parameters or if \texttt{min} is greater than \texttt{max}, a red ``X'' will be presented as the graphic to indicate an error condition.  Using the default configuration, this could be requested as \texttt{/Dial?min=0\&max=100\&value=50}
 \end{itemize}
 
-\subsection{\texttt{text}}
-This package consists of a spec and body and is used to support the serving of text files.  The visible routines are:
+\subsection{\texttt{files}}
+This package consists of a spec and body and is used to support the serving of binary and text files.  The visible routines are:
 \begin{itemize}
-  \item \begin{verbatim}send_file_with_headers(s : GNAT.Sockets.Stream_Access;
+  \item \begin{verbatim}send_binary_with_headers(s : GNAT.Sockets.Stream_Access;
+                         mime : String; name : String);
+            \end{verbatim}
+  This procedure sends a binary file to the client with headers.  The file name is contained in the parameter \texttt{name} and the MIME type of the file is contained in the parameter \texttt{mime}.
+
+  \item \begin{verbatim}send_text_with_headers(s : GNAT.Sockets.Stream_Access;
                        mime : String; name : String)
   \end{verbatim}
   This procedure sends a text file to the client with headers.  The file name is contained in the parameter \texttt{name} and the MIME type of the file is contained in the parameter \texttt{mime}.
 
-  \item \begin{verbatim}send_file_without_headers(s : GNAT.Sockets.Stream_Access;
+  \item \begin{verbatim}send_text_without_headers(s : GNAT.Sockets.Stream_Access;
                           name : String)
   \end{verbatim}
   This procedure sends a text file to the client without headers.  The file name is contained in the parameter \texttt{name}.  No HTTP headers are sent.
-\end{itemize}
-
-\subsection{\texttt{binary}}
-This package consists of a spec and body and is used to support the serving of binary files.  The one visible routine is:
-\begin{itemize}
-  \item \begin{verbatim}send_file_with_headers(s : GNAT.Sockets.Stream_Access;
-                       mime : String; name : String);
-            \end{verbatim}
-  This procedure sends a binary file to the client with headers.  The file name is contained in the parameter \texttt{name} and the MIME type of the file is contained in the parameter \texttt{mime}.
 \end{itemize}
 
 \section{Configuration}
