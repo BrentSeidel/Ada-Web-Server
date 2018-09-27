@@ -120,10 +120,10 @@ package body bbs.http is
    --
    function get_line_from_stream(s : GNAT.Sockets.Socket_Type)
                                  return Ada.Strings.Unbounded.Unbounded_String is
-      c : Character;
+      c    : Character;
       last : Ada.Streams.Stream_Element_Offset;
       elem : Ada.Streams.Stream_Element_Array(1 .. 1);
-      str : Ada.Strings.Unbounded.Unbounded_String;
+      str  : Ada.Strings.Unbounded.Unbounded_String;
    begin
       loop
          loop
@@ -153,10 +153,10 @@ package body bbs.http is
    --
    function get_data_from_stream(s : GNAT.Sockets.Socket_Type; len : Natural)
                                  return Ada.Strings.Unbounded.Unbounded_String is
-      c : Character;
+      c    : Character;
       last : Ada.Streams.Stream_Element_Offset;
       elem : Ada.Streams.Stream_Element_Array(1 .. 1);
-      str : Ada.Strings.Unbounded.Unbounded_String;
+      str  : Ada.Strings.Unbounded.Unbounded_String;
    begin
       for i in Natural range 1 .. len loop
          GNAT.Sockets.Receive_Socket(s, elem, last);

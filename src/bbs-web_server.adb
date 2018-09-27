@@ -19,6 +19,7 @@ package body bbs.web_server is
       handler_index : Natural := 1;
       internal_map : constant bbs.web_common.proc_tables.Map := internals;
       directory : bbs.web_common.dictionary.Map;
+      handled : Boolean;
    begin
       --
       --  Do a bunch of initialization stuff.  We want to listen on any
@@ -54,24 +55,39 @@ package body bbs.web_server is
          bbs.web_common.counter := bbs.web_common.counter + 1;
          --
          --  Handlers contains a array of num_handlers tasks.  As requests come
-         --  in, they are assigned to tasks in round-robin fashon.  This means
-         --  that it is possible for a task that takes a long time to process
-         --  to eventually delay serving of other tasks.  With a little more
-         --  complexity, it would be possible to change this to use the next
-         --  available task.  In most cases, tasks should complete quickly and
-         --  this should not be a big problem.
+         --  in, they are assigned to tasks in round-robin fashon.  If the next
+         --  task is not ready to accept the job, the next task is tried.  This
+         --  helps to prevent one slow task from blocking processing if other
+         --  tasks are available.
          --
-         if (debug) then
-            Ada.Text_IO.Put_Line(Integer'Image(bbs.web_common.counter) & " requests serviced, " &
-                                   Integer'Image(bbs.web_common.task_counter.read) &
-                                   " active tasks.");
-            Ada.Text_IO.Put_Line("Using server index " & Natural'Image(handler_index));
-         end if;
-         handlers(handler_index).start(sock_tx, internal_map, directory);
-         handler_index := handler_index + 1;
-         if handler_index > num_handlers then
-            handler_index := 1;
-         end if;
+         --  The delay time can be tuned so that the loop waiting for an
+         --  available task doesn't use up enough CPU time to prevent tasks
+         --  from becoming available.  In most cases, this should not be an
+         --  issue.
+         --
+         --  Note that a malicious user can still block processing by initiating
+         --  num_handlers requests and just holding them open.
+         --
+         handled := False;
+         while not handled loop
+            if (debug) then
+               Ada.Text_IO.Put_Line(Integer'Image(bbs.web_common.counter) &
+                                      " requests serviced, " &
+                                      Integer'Image(bbs.web_common.task_counter.read) &
+                                      " active tasks.");
+               Ada.Text_IO.Put_Line("Using server index " & Natural'Image(handler_index));
+            end if;
+            select
+               handlers(handler_index).start(sock_tx, internal_map, directory);
+               handled := True;
+            or
+               delay 0.0;
+            end select;
+            handler_index := handler_index + 1;
+            if handler_index > num_handlers then
+               handler_index := 1;
+            end if;
+         end loop;
       end loop;
       --
       --  Close the sockets and exit.  This will be done when some sort of
