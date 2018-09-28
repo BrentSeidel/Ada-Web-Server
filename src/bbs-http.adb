@@ -129,7 +129,7 @@ package body bbs.http is
          loop
             GNAT.Sockets.Receive_Socket(s, elem, last);
             if last = 0 then
-               raise Ada.Text_IO.End_Error;
+               raise bbs.web_common.closed_by_peer;
             end if;
             c := Character'Val(elem(1));
             str := str & c;
@@ -137,7 +137,7 @@ package body bbs.http is
          end loop;
          GNAT.Sockets.Receive_Socket(s, elem, last);
          if last = 0 then
-            raise Ada.Text_IO.End_Error;
+            raise bbs.web_common.closed_by_peer;
          end if;
          c := Character'Val(elem(1));
          str := str & c;
@@ -161,7 +161,7 @@ package body bbs.http is
       for i in Natural range 1 .. len loop
          GNAT.Sockets.Receive_Socket(s, elem, last);
          if last = 0 then
-            raise Ada.Text_IO.End_Error;
+            raise bbs.web_common.closed_by_peer;
          end if;
          c := Character'Val(elem(1));
          str := str & c;
@@ -192,7 +192,7 @@ package body bbs.http is
       --  The first line contains the request.  Parse it out.
       --
       line := get_line_from_stream(sock);
-      if debug_req then
+      if debug_req.get then
          Ada.Text_IO.Put_Line(ASU.To_String(line));
       end if;
       index := ASU.Index(line, " ");
@@ -252,7 +252,7 @@ package body bbs.http is
                length := Natural'Value(ASU.To_String(temp2));
             end if;
          end if;
-         if debug_head then
+         if debug_head.get then
             Ada.Text_IO.Put_Line(ASU.To_String(line));
          end if;
       end loop;
@@ -315,28 +315,5 @@ package body bbs.http is
          end loop;
       end if;
    end read_headers;
-   --
-   --  Procedures and functions to get and set the debugging flags.
-   --
-   function get_debug_req return Boolean is
-   begin
-      return debug_req;
-   end get_debug_req;
-   --
-   function get_debug_head return Boolean is
-   begin
-      return debug_head;
-   end get_debug_head;
-   --
-   procedure set_debug_req(f : Boolean) is
-   begin
-      debug_req := f;
-   end set_debug_req;
-   --
-   procedure set_debug_head(f : Boolean) is
-   begin
-      debug_head := f;
-   end set_debug_head;
-   --
 
 end bbs.http;

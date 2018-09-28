@@ -11,7 +11,7 @@ package body bbs.internal is
    begin
       bbs.http.ok(s, "application/xml");
       String'Write(s, "<xml><tasks>" & Integer'Image(bbs.web_common.task_counter.read) &
-                     "</tasks><counter>" & Integer'Image(bbs.web_common.counter) &
+                     "</tasks><counter>" & Integer'Image(bbs.web_common.request_counter.read) &
                      "</counter></xml>" & CRLF);
    end xml_count;
 
@@ -67,7 +67,7 @@ package body bbs.internal is
       String'Write(s, "<h1>Reload Request</h1>");
       String'Write(s, "<p>Configuration file reload request submitted.</p>" & CRLF);
       bbs.html.html_end(s, "footer.html");
-      bbs.web_common.reload_configuration := True;
+      bbs.web_common.reload_configuration.set;
    end html_reload_config;
 
 end bbs.internal;

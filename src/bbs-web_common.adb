@@ -1,5 +1,7 @@
 with Ada.Text_IO;
 with Ada.Text_IO.Unbounded_IO;
+with Ada.Exceptions;
+
 package body bbs.web_common is
    package ASU renames Ada.Strings.Unbounded; -- not the school
 
@@ -23,6 +25,23 @@ package body bbs.web_common is
          return value;
       end;
    end protected_counter;
+   --
+   -- A protected flag for communicating between tasks
+   --
+   protected body protected_flag is
+      procedure set is
+      begin
+         value := True;
+      end;
+      procedure clear is
+      begin
+         value := False;
+      end;
+      function get return Boolean is
+      begin
+         return value;
+      end;
+   end protected_flag;
    --
    --  Load the dictionary from a file.  No error checking is done on the open
    --  since if this doesn't work, there really isn't much point in continuing.
@@ -80,6 +99,11 @@ package body bbs.web_common is
          end if;
       end loop;
       Ada.Text_IO.Close(file);
+   exception
+      when err: others =>
+         Ada.Text_IO.Put_Line("Exception occured processing directory file.");
+         Ada.Text_IO.Put_Line(Ada.Exceptions.Exception_Information(err));
+         raise;
    end load_directory;
    --
    --  Convert a hex digit character to a number

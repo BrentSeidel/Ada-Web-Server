@@ -32,10 +32,9 @@ package bbs.web_server is
    end request_handler;
 
    --
-   -- Set and get value of debug flag;
+   -- Flag to control display of debug messages
    --
-   function get_debug return Boolean;
-   procedure set_debug(f : Boolean);
+   debug : bbs.web_common.protected_flag; -- Display requests.
 
 private
    --
@@ -43,9 +42,5 @@ private
    --  should be based on the expected load.
    --
    num_handlers : constant Natural := 10;
-   --
-   -- Flag to control display of debug messages
-   --
-   debug : Boolean := False; -- Display requests.
 
 end bbs.web_server;

@@ -12,6 +12,31 @@ with GNAT.Sockets;
 package bbs.web_common is
 
    --
+   -- Define common exceptions.
+   --
+   closed_by_peer : Exception; -- Other end of socket has been closed.
+   --
+   --  A protected type for maintaining a counter of active request_handler
+   --  tasks.
+   --
+   protected type protected_counter is
+      procedure increment;
+      procedure decrement;
+      function read return Integer;
+   private
+      value : integer := 0;
+   end protected_counter;
+   --
+   -- A protected flag for communicating between tasks
+   --
+   protected type protected_flag is
+      procedure set;
+      procedure clear;
+      function get return Boolean;
+   private
+      value : Boolean := False;
+   end protected_flag;
+   --
    --  Record type containing a file name and a MIME type.  Used to identify
    --  files to serve to the client.  These are unbounded strings because Ada
    --  doesn't let you use unconstrained Strings here.
@@ -82,20 +107,9 @@ package bbs.web_common is
    CRLF : constant String := Ada.Characters.Latin_1.CR & Ada.Characters.Latin_1.LF;
    server_header : constant String := "Server: Custom Ada 2012 Server" & CRLF;
    --
-   --  A counter to provide some data to send to the client.
+   --  A counter to keep track of the number of requests that have been received
    --
-   counter : Integer := 0;
-   --
-   --  A protected type for maintaining a counter of active request_handler
-   --  tasks.
-   --
-   protected type protected_counter is
-      procedure increment;
-      procedure decrement;
-      function read return Integer;
-   private
-      value : integer := 0;
-   end protected_counter;
+   request_counter : protected_counter;
    --
    --  A counter to keep track of how many request_handler tasks are active.
    --  The value should be a low positive number.  If it goes negative, a
@@ -107,5 +121,5 @@ package bbs.web_common is
    --  Flag to indicate that the configuration file has changed and needs to be
    --  reloaded.  This would typically be used during development or debugging.
    --
-   reload_configuration : Boolean := False;
+   reload_configuration : protected_flag;
 end bbs.web_common;

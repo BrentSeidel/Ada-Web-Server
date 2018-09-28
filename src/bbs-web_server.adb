@@ -1,4 +1,5 @@
 with Ada.Text_IO;
+with Ada.Exceptions;
 with bbs.files;
 with bbs.http;
 use type bbs.http.request_type;
@@ -43,16 +44,16 @@ package body bbs.web_server is
          --
          --  Check if the configuration needs to be reloaded.
          --
-         if bbs.web_common.reload_configuration then
-            bbs.web_common.load_directory("config.txt", directory);
-            bbs.web_common.reload_configuration := False;
+         if bbs.web_common.reload_configuration.get then
+            bbs.web_common.load_directory(config_name, directory);
+            bbs.web_common.reload_configuration.clear;
          end if;
          --
          --  This call blocks until a connection request comes in.  Once a
          --  request comes, increment the counter of requests handled.
          --
          GNAT.Sockets.Accept_Socket(sock_rx, sock_tx, local);
-         bbs.web_common.counter := bbs.web_common.counter + 1;
+         bbs.web_common.request_counter.increment;
          --
          --  Handlers contains a array of num_handlers tasks.  As requests come
          --  in, they are assigned to tasks in round-robin fashon.  If the next
@@ -70,8 +71,8 @@ package body bbs.web_server is
          --
          handled := False;
          while not handled loop
-            if (debug) then
-               Ada.Text_IO.Put_Line(Integer'Image(bbs.web_common.counter) &
+            if (debug.get) then
+               Ada.Text_IO.Put_Line(Integer'Image(bbs.web_common.request_counter.read) &
                                       " requests serviced, " &
                                       Integer'Image(bbs.web_common.task_counter.read) &
                                       " active tasks.");
@@ -94,8 +95,24 @@ package body bbs.web_server is
       --  shutdown signal is received to exit the loop above.  This is not
       --  yet implemented
       --
---      GNAT.Sockets.Close_Socket(sock1);
+--      GNAT.Sockets.Close_Socket(sock_rx);
 --      Ada.Text_IO.Put_Line("Done.");
+   exception
+      when err: others =>
+         Ada.Text_IO.Put_Line("Exception occured in web server.");
+         Ada.Text_IO.Put_Line(Ada.Exceptions.Exception_Information(err));
+         --
+         --  Tell all the handler tasks to terminate.  The timed select is there
+         --  just in case a task has already terminated.
+         --
+         for handler_index in handlers'Range loop
+            select
+               handlers(handler_index).end_task;
+            or
+               delay 2.0; -- Give each task 2 seconds to terminate.
+            end select;
+         end loop;
+         raise;
    end server;
    --
    --  Handle the details of the http request.  This is done as a task.  Once a
@@ -142,13 +159,13 @@ package body bbs.web_server is
          exception
                --
                --  If the remote end of the socket is closed while reading the
-               --  headers, an Ada.Text_IO.End_Error exception is thrown and
-               --  further processing is abandoned.  The handler sets the
+               --  headers, a bbs.web_common.closed_by_peer exception is thrown
+               --  and further processing is abandoned.  The handler sets the
                --  request type to bbs.http.Other which is not proceesed.  The
                --  normal cleanup is done and the task loops to wait for another
                --  request.
                --
-            when Ada.Text_IO.End_Error =>
+            when bbs.web_common.closed_by_peer =>
                Ada.Text_IO.Put_Line("Socket unexpectedly closed.");
                req := bbs.http.Other;
          end;
@@ -248,18 +265,5 @@ package body bbs.web_server is
          bbs.web_common.task_counter.decrement;
       end loop;
    end request_handler;
-
-   --
-   --  Set and get value of debug flag;
-   --
-   function get_debug return Boolean is
-   begin
-      return debug;
-   end get_debug;
-   --
-   procedure set_debug(f : Boolean) is
-   begin
-      debug := f;
-   end set_debug;
 
 end bbs.web_server;

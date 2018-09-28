@@ -49,21 +49,14 @@ package bbs.http is
                           dir : bbs.web_common.dictionary.Map)
      with Global => Null;
    --
-   -- Procedures and functions to get and set the debugging flags.
+   -- Flags to control printing of requests and headers for debugging purposes.
    --
-   function get_debug_req return Boolean;
-   function get_debug_head return Boolean;
-   procedure set_debug_req(f : Boolean);
-   procedure set_debug_head(f : Boolean);
+   debug_req : bbs.web_common.protected_flag;
+   debug_head : bbs.web_common.protected_flag;
 
 private
    CRLF : String renames bbs.web_common.CRLF;
    server_header : String renames bbs.web_common.server_header;
-   --
-   -- Flags to control printing of requests and headers for debugging purposes.
-   --
-   debug_req : Boolean := False;
-   debug_head : Boolean := False;
    --
    -- Return code 200 OK for OPTIONS reqest cases
    --

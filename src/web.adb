@@ -1,3 +1,5 @@
+with Ada.Text_IO;
+with Ada.Exceptions;
 with GNAT.Sockets;
 with bbs.svg;
 with bbs.internal;
@@ -28,17 +30,26 @@ procedure web is
 
 begin
    --
-   -- Turn debugging flags on
+   -- Set debugging flags to appropriate values.
    --
-   bbs.web_server.set_debug(True);
-   bbs.http.set_debug_req(True);
-   bbs.http.set_debug_head(False);
+   bbs.web_server.debug.set;
+   bbs.http.debug_req.set;
+   bbs.http.debug_head.clear;
    --
    -- Build the map for internal routines.
    --
    build_internal_map;
    --
-   -- Start the web server.
+   -- Start the web server.  This does not return normally.
    --
    bbs.web_server.server(internal_map, "config.txt", 31415);
+   --
+   --  This is used to cause a file not found exception for testing purposes.
+   --  Comment out the line above this one and uncomment this one to test.
+   --
+--   bbs.web_server.server(internal_map, "bad-name.bad", 31415);
+exception
+   when err: Others =>
+      Ada.Text_IO.Put_Line("Unhandled exception occured during operation.");
+      Ada.Text_IO.Put_Line(Ada.Exceptions.Exception_Information(err));
 end web;
