@@ -122,4 +122,10 @@ package bbs.web_common is
    --  reloaded.  This would typically be used during development or debugging.
    --
    reload_configuration : protected_flag;
+   --
+   --  Flag to indicate that the program is shutting down.  The web server uses
+   --  this to know when to exit.
+   --
+   exit_flag : protected_flag;
+
 end bbs.web_common;

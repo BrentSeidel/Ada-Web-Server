@@ -69,5 +69,28 @@ package body bbs.internal is
       bbs.html.html_end(s, "footer.html");
       bbs.web_common.reload_configuration.set;
    end html_reload_config;
+   --
+   -- Set the web_common exit flag.
+   --
+   procedure html_set_exit(s : GNAT.Sockets.Stream_Access;
+                           h : bbs.web_common.params.Map;
+                           p : bbs.web_common.params.Map) is
+   begin
+      bbs.http.ok(s, "text/html");
+      bbs.html.html_head(s, "Server Exiting", "Style");
+      String'Write(s, "<h1>Exit Flag Set</h1>");
+      String'Write(s, "Web server should be exiting.");
+      bbs.html.html_end(s, "footer.html");
+      web_common.exit_flag.set;
+   end html_set_exit;
+   --
+   -- Raise an exception to test task exception handling
+   --
+   procedure html_raise(s : GNAT.Sockets.Stream_Access;
+                        h : bbs.web_common.params.Map;
+                        p : bbs.web_common.params.Map) is
+   begin
+      raise Program_Error;
+   end;
 
 end bbs.internal;

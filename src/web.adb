@@ -26,6 +26,8 @@ procedure web is
       internal_map.Insert("target", bbs.internal.target'Access);
       internal_map.Insert("reload", bbs.internal.html_reload_config'Access);
       internal_map.Insert("counter", bbs.internal.xml_count'Access);
+      internal_map.Insert("raise", BBS.internal.html_raise'Access);
+      internal_map.Insert("exit", BBS.internal.html_set_exit'Access);
    end;
 
 begin

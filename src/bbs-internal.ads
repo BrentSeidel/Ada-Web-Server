@@ -23,6 +23,19 @@ package bbs.internal is
    procedure html_reload_config(s : GNAT.Sockets.Stream_Access;
                                 h : bbs.web_common.params.Map;
                                 p : bbs.web_common.params.Map);
+   --
+   -- Set the web_common exit flag.
+   --
+   procedure html_set_exit(s : GNAT.Sockets.Stream_Access;
+                           h : bbs.web_common.params.Map;
+                           p : bbs.web_common.params.Map);
+   --
+   -- Raise an exception to test task exception handling
+   --
+   procedure html_raise(s : GNAT.Sockets.Stream_Access;
+                        h : bbs.web_common.params.Map;
+                        p : bbs.web_common.params.Map);
+
 
 private
    CRLF : String renames bbs.web_common.CRLF;

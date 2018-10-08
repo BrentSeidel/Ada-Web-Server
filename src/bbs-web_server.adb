@@ -21,6 +21,7 @@ package body bbs.web_server is
       internal_map : constant bbs.web_common.proc_tables.Map := internals;
       directory : bbs.web_common.dictionary.Map;
       handled : Boolean;
+      fail_count : Integer;
    begin
       --
       --  Do a bunch of initialization stuff.  We want to listen on any
@@ -40,7 +41,7 @@ package body bbs.web_server is
       --  Then close the sockets and exit.
       --
       GNAT.Sockets.Listen_Socket(sock_rx);
-      loop
+      while not web_common.exit_flag.get loop
          --
          --  Check if the configuration needs to be reloaded.
          --
@@ -70,6 +71,7 @@ package body bbs.web_server is
          --  num_handlers requests and just holding them open.
          --
          handled := False;
+         fail_count := 0;
          while not handled loop
             if (debug.get) then
                Ada.Text_IO.Put_Line(Integer'Image(bbs.web_common.request_counter.read) &
@@ -78,12 +80,24 @@ package body bbs.web_server is
                                       " active tasks.");
                Ada.Text_IO.Put_Line("Using server index " & Natural'Image(handler_index));
             end if;
-            select
-               handlers(handler_index).start(sock_tx, internal_map, directory);
-               handled := True;
-            or
-               delay 0.0;
-            end select;
+            begin
+               select
+                  handlers(handler_index).start(sock_tx, internal_map, directory);
+                  handled := True;
+               or
+                  delay 0.0;
+               end select;
+            exception
+               when Tasking_Error =>
+                  fail_count := fail_count + 1;
+                  if fail_count > num_handlers then
+                     web_common.exit_flag.set;
+                     handled := True;
+                     Ada.Text_IO.Put_Line("All tasks failed.  Exiting.");
+                  end if;
+                  Ada.Text_IO.Put_Line("Task " & Integer'Image(handler_index) &
+                                         " is dead.  Trying the next one.");
+            end;
             handler_index := handler_index + 1;
             if handler_index > num_handlers then
                handler_index := 1;
@@ -91,12 +105,28 @@ package body bbs.web_server is
          end loop;
       end loop;
       --
-      --  Close the sockets and exit.  This will be done when some sort of
-      --  shutdown signal is received to exit the loop above.  This is not
-      --  yet implemented
+      --  Close the sockets and exit.  The outer loop exits when the exit_flag
+      --  gets set.
       --
---      GNAT.Sockets.Close_Socket(sock_rx);
---      Ada.Text_IO.Put_Line("Done.");
+      GNAT.Sockets.Close_Socket(sock_rx);
+      Ada.Text_IO.Put_Line("Done.");
+         --
+         --  Tell all the handler tasks to terminate.  The timed select is there
+         --  just in case a task has already terminated.
+         --
+      for handler_index in handlers'Range loop
+         begin
+            select
+               handlers(handler_index).end_task;
+            or
+               delay 2.0; -- Give each task 2 seconds to terminate.
+            end select;
+         exception
+            when Tasking_Error =>
+               Ada.Text_IO.Put_Line("Task " & Integer'Image(handler_index) &
+                                      " is already terminated.");
+         end;
+      end loop;
    exception
       when err: others =>
          Ada.Text_IO.Put_Line("Exception occured in web server.");
@@ -106,11 +136,17 @@ package body bbs.web_server is
          --  just in case a task has already terminated.
          --
          for handler_index in handlers'Range loop
-            select
-               handlers(handler_index).end_task;
-            or
-               delay 2.0; -- Give each task 2 seconds to terminate.
-            end select;
+            begin
+               select
+                  handlers(handler_index).end_task;
+               or
+                  delay 2.0; -- Give each task 2 seconds to terminate.
+               end select;
+            exception
+               when Tasking_Error =>
+                  Ada.Text_IO.Put_Line("Task " & Integer'Image(handler_index) &
+                                         " is already terminated.");
+            end;
          end loop;
          raise;
    end server;
