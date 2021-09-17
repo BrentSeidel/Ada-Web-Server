@@ -223,6 +223,7 @@ package body bbs.web_server is
                      --
                      --  The following mime types should be supported:
                      --  * application/javascript
+                     --  * application/pdf
                      --  * application/xml
                      --  * image/jpeg
                      --  * image/png
@@ -244,7 +245,8 @@ package body bbs.web_server is
                         --  Send an text type file with the proper mime type.
                         --
                         bbs.files.send_text_with_headers(s, mime, name);
-                     elsif (mime = "image/jpeg") or (mime = "image/png") then
+                     elsif (mime = "image/jpeg") or (mime = "image/png") or
+                       (mime = "application/pdf") then
                         --
                         --  Send a binary file with the proper mime type.
                         --

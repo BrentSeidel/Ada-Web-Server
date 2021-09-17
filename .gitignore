@@ -7,6 +7,11 @@
 # obj directory
 obj/*
 
+# other Ada generated files
+*.stderr
+*.stdout
+*.cswi
+
 main
 *.log
 *.gz
