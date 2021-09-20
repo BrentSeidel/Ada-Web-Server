@@ -2,7 +2,7 @@ with "../BBS-Ada/bbs.gpr";
 
 project Web is
 
-   for Source_Dirs use ("src");
+   for Source_Dirs use ("src", ".");
    for Object_Dir use "obj";
    for Main use ("web.adb");
    for Exec_Dir use ".";
