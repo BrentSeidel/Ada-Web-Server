@@ -13,8 +13,11 @@ obj/*
 *.cswi
 
 main
+web
+
+# LaTeX files
 *.log
 *.gz
 *.aux
 *.dvi
-web
+*.toc

@@ -1,72 +1,161 @@
-\documentclass[10pt, openany, draft]{article}
-
+\documentclass[10pt, openany]{book}
+%
+%  Packages to use
+%
 \usepackage{fancyhdr}
-\usepackage{multind}
-\usepackage{pstricks}
-\usepackage{graphicx}
-\usepackage{caption}
-\usepackage[yyyymmdd]{datetime}
-\renewcommand{\dateseparator}{-}
+\usepackage{fancyvrb}
+\usepackage{fancybox}
+%
+\usepackage{lastpage}
+\usepackage{imakeidx}
+%
+\usepackage{amsmath}
+\usepackage{amsfonts}
+%
 \usepackage{geometry}
 \geometry{letterpaper}
 %
+\usepackage{url}
+\usepackage{gensymb}
+\usepackage{multicol}
+\usepackage{xcolor}
+%
+\usepackage[pdf]{pstricks}
+\usepackage{graphicx}
+\DeclareGraphicsExtensions{.pdf}
+\DeclareGraphicsRule{.pdf}{pdf}{.pdf}{}
+%
+% Rules to allow import of graphics files in EPS format
+%
+\usepackage{graphicx}
+\DeclareGraphicsExtensions{.eps}
+\DeclareGraphicsRule{.eps}{eps}{.eps}{}
+%
+%  Include the listings package
+%
+\usepackage{listings}
+%
+% Macro definitions
+%
+\newcommand{\operation}[1]{\textbf{\texttt{#1}}}
+\newcommand{\package}[1]{\texttt{#1}}
+\newcommand{\function}[1]{\texttt{#1}}
+\newcommand{\constant}[1]{\emph{\texttt{#1}}}
+\newcommand{\keyword}[1]{\texttt{#1}}
+\newcommand{\datatype}[1]{\texttt{#1}}
+\newcommand{\cli}[1]{\texttt{#1}}
+\newcommand{\uvec}[1]{\textnormal{\bfseries{#1}}}
+\newcommand{\comment}[1]{{\color{red}{#1}}}
+%
+\newcommand{\docname}{Users's Manual for \\ Ada Web Server}
+%
 % Front Matter
 %
-\title{Ada Web Server}
+\title{\docname}
 \author{Brent Seidel \\ Phoenix, AZ}
 \date{ \today }
 %========================================================
 %%% BEGIN DOCUMENT
 \begin{document}
+%
+%  Header's and Footers
+%
+\fancypagestyle{plain}{
+  \fancyhead[L]{}%
+  \fancyhead[R]{}%
+  \fancyfoot[C]{Page \thepage\ of \pageref{LastPage}}%
+  \fancyfoot[L]{Ada Programming}
+  \renewcommand{\headrulewidth}{0pt}%
+  \renewcommand{\footrulewidth}{0.4pt}%
+}
+\fancypagestyle{myfancy}{
+  \fancyhead[L]{\docname}%
+  \fancyhead[R]{\leftmark}
+  \fancyfoot[C]{Page \thepage\ of \pageref{LastPage}}%
+  \fancyfoot[L]{Ada Programming}
+  \renewcommand{\headrulewidth}{0.4pt}%
+  \renewcommand{\footrulewidth}{0.4pt}%
+}
+\pagestyle{myfancy}
+%
+% Produce the front matter
+%
+\frontmatter
 \maketitle
-\section{Synopsis}
+\begin{center}
+This document is \copyright 2024 Brent Seidel.  All rights reserved.
+
+\paragraph{}Note that this is a draft version and not the final version for publication.
+\end{center}
+\tableofcontents
+
+\mainmatter
+%========================================================
+\chapter{Introduction}
 This Ada web server is a simple server designed to serve a few files and provide an interface to embedded systems.  It is not intended to be a highly flexible high performance server--there are plenty of systems that provide that.  It also does not currently support HTTPS or any authentication methods, so it should not be used in an application that needs security.  However, it does not, by default refer to any external servers so it can be used on an isolated network.
 
 This document describes the configuration of and modifications to the Ada web server.  The amount of customization needed depends on the application.  For some applications, no modifications of the software may be needed.  In other applications, major modifications are needed.
 
-Note: As part of a restructuring, all packages have been prefixed with \texttt{bbs.}  This is part of an effort to allow the code to be used as a library instead of being integrated into the target application.
+\section{License}
+This project is licensed using the GNU General Public License V3.0.  Should you wish other licensing terms, contact the author.
 
-\section{Installation}
-This repository depends on the BBS-Ada repository because of the \texttt{bbs.} prefix.  It is written in Ada 2012 and built using the GNAT Ada tool set.  The following Ada packages are used in various places throughout the system:
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+%========================================================
+\chapter{How to Obtain}
+This collection is currently available on GitHub at \url{https://github.com/BrentSeidel/Ada-Web-Server}
+
+\section{Dependencies}
+\subsection{Ada Libraries}
 \begin{itemize}
-  \item \verb|Ada.Characters.Latin_1|
-  \item \verb|Ada.Containers.Indefinite_Hashed_Maps|
-  \item \verb|Ada.Sequential_IO|
-  \item \verb|Ada.Strings|
-  \item \verb|Ada.Strings.Equal_Case_Insensitive|
-  \item \verb|Ada.Strings.Fixed|
-  \item \verb|Ada.Strings.Hash_Case_Insensitive|
-  \item \verb|Ada.Strings.Unbounded|
-  \item \verb|Ada.Text_IO|
-  \item \verb|Ada.Text_IO.Unbounded_IO|
-  \item \verb|GNAT.Sockets|
+  \item \package{Ada.Characters.Latin\_1}
+  \item \package{Ada.Containers.Indefinite\_Hashed\_Maps}
+  \item \package{Ada.Exceptions}
+  \item \package{Ada.Sequential\_IO}
+  \item \package{Ada.Streams}
+  \item \package{Ada.Strings}
+  \item \package{Ada.Strings.Equal\_Case\_Insensitive}
+  \item \package{Ada.Strings.Fixed}
+  \item \package{Ada.Strings.Hash\_Case\_Insensitive}
+  \item \package{Ada.Strings.Unbounded}
+  \item \package{Ada.Text\_IO}
+  \item \package{Ada.Text\_IO.Unbounded\_IO}
 \end{itemize}
 
-\section{Software Structure}
-The software consists of a number of packages, each with a spec and a body.  See figure \ref{fig:With}.
-\begin{figure}
-  \centering
-  \input{with-tree}
-  \caption{``With'' Structure of Packages.\\  ``With'' to packages outside of this repository (Ada and GNAT standard packages) are ignored.  ``With'' from spec and body treated the same.}
-  \label{fig:With}
-\end{figure}
+\subsection{Other Libraries}
+This library depends on the root package \package{BBS} available at \url{https://github.com/BrentSeidel/BBS-Ada}.  Packages external to this project are marked with an asterisk.
+\begin{itemize}
+  \item \package{with bbs.files}
+  \item \package{with bbs.html}
+  \item \package{with bbs.http}
+  \item \package{with bbs.web\_common}
+  \item \package{GNAT.Sockets}*
+\end{itemize}
+
+%========================================================
+\chapter{Usage Instructions}
+This is a library of routines intended to be used by some program.  To use these in your program, edit your *\keyword{.gpr} file to include a line to \keyword{with} the path to \keyword{web\_libl.gpr}.  Then in your Ada code \keyword{with} in the package(s) you need and use the routines.
+
+%========================================================
+\chapter{API Description}
+%--------------------------------------------------------------------------------------------------
 
 \subsection{\texttt{web.adb}}
 This is the main routine.  It initializes the internal items table and starts the web server.  If other initializations are needed, they could be added or called from here.
 
 \subsection{\texttt{web\_common}}
 This package contains a number of items that are available for use in other packages.  Items are put here instead of in \texttt{web\_server} in order to avoid circular dependancies.  The primary item from \texttt{web\_common} that is expected to be used by user software is the \texttt{params} hash map.  The package is instantiated as follows:
-\begin{verbatim}
+\begin{lstlisting}
    package params is new Ada.Containers.Indefinite_Hashed_Maps
      (Element_Type => String,
       Key_Type => String,
       Hash => Ada.Strings.Hash_Case_Insensitive,
       Equivalent_Keys => Ada.Strings.Equal_Case_Insensitive);
-\end{verbatim}
+\end{lstlisting}
 If your code needs access to parameters passed in a GET or POST request, this is how you will get access to those parameters.  There are some examples where this is used in the \texttt{internal} and \texttt{svg} packages.  Both parameters and headers use this hash map type.
 
 Another hash map type is instantiated for internally generated items.  First, every internal item procedure has the same signature so an access type can be created as:
-\begin{verbatim}
+\begin{lstlisting}
    --
    --  Define a type for the user procedures.  This is for a map used to map
    --  the internal procedures.  The parameters are:
@@ -77,9 +166,9 @@ Another hash map type is instantiated for internally generated items.  First, ev
    type user_proc is access procedure (s : GNAT.Sockets.Stream_Access;
                                        p : params.Map;
                                        h : params.Map);
-\end{verbatim}
+\end{lstlisting}
 Then the hash map package is instantiated as:
-\begin{verbatim}
+\begin{lstlisting}
    --
    --  Instantiate a hashed map indexed by a string and containing procedure
    --  accesses.  Used as a table to identify which internal procedure to call
@@ -90,12 +179,12 @@ Then the hash map package is instantiated as:
       Key_Type => String,
       Hash => Ada.Strings.Hash_Case_Insensitive,
       Equivalent_Keys => Ada.Strings.Equal_Case_Insensitive);
-\end{verbatim}
+\end{lstlisting}
 This map is populated and used in the \texttt{web\_server} package.
 
 \subsection{\texttt{web\_server}}
 This package contains the main web server software.  Since this package calls the user code, any attempt by user code to call items in this package will create a circular dependency.  Items that may be needed by user code should be in \texttt{web\_common}.  The item in this package that gets called with user code is the following procedure:
-\begin{verbatim}
+\begin{lstlisting}
    --
    --  This is the web server.  In initializes the network interface and enters
    --  an infinite loop processing requests.  The passed paraemters are:
@@ -110,7 +199,7 @@ This package contains the main web server software.  Since this package calls th
    procedure server(internals : bbs.web_common.proc_tables.Map;
                     config_name : String;
                     port : GNAT.Sockets.Port_Type);
-\end{verbatim}
+\end{lstlisting}
 This procedure should be called after all other initialization is done.  It starts the web server and does not return.  At some point, it may get turned into a task so that other processing in the main task can proceed along with it.
 
 \subsection{\texttt{html}}
@@ -135,51 +224,51 @@ This package contains routines to support HTTP.  Currently GET and POST methods 
   Return code 500 INTERNAL SERVER ERROR generally when unable to open the file for the specified item.  This means an item has been added to \texttt{config.txt} without adding the file to the system.
   \item \verb|not_implemented_int(s : GNAT.Sockets.Stream_Access; item: String)|\\
   Return code 501 NOT IMPLEMENTED for a request for an internally generated item that is not yet implemented.
-  \item \begin{verbatim}read_headers(s : GNAT.Sockets.Stream_Access;
+  \item \begin{lstlisting}read_headers(s : GNAT.Sockets.Stream_Access;
              method : out request_type;
              item : out Ada.Strings.Unbounded.Unbounded_String;
              params : in out web_common.params.Map)
-            \end{verbatim}
+            \end{lstlisting}
    The \texttt{read\_headers} procedure handles both GET, POST, and OPTIONS request and returns any passed parameters.  Returned values will be the requested item in \texttt{item} and a dictionary containing the parameters in \texttt{params}.  If there are no parameters, the dictionary will be empty.  This routine is called by the web server to read the headers of the HTTP request.  By the time any user code is called, the headers have already been read.
 \end{itemize}
 
 \subsection{\texttt{internal}}
 This package contains routines to generate HTML or XML for internally generated items.  The generated HTML or XML is written to the \texttt{Stream\_Access} that needs to be passed in.  The proper HTTP headers also need to be written.  The routines in this package are only referenced (if referenced at all) from the internal items map.  They do provide some examples of how to generate items.  The internal routines can have access to parameters passed in the GET or POST request as well as the HTTP headers.  If no parameters were passed, the parameters dictionary is empty.  The visible routines are:
 \begin{itemize}
-  \item \begin{verbatim}
+  \item \begin{lstlisting}
 procedure xml_count(s : GNAT.Sockets.Stream_Access;
                     h : web_common.params.Map;
                     p : web_common.params.Map);
-\end{verbatim}
+\end{lstlisting}
   Sends the count of transactions as an xml message.
-  \item \begin{verbatim}
+  \item \begin{lstlisting}
 procedure html_show_config(s : GNAT.Sockets.Stream_Access;
                            h : web_common.params.Map;
                            p : web_common.params.Map);
-\end{verbatim}
+\end{lstlisting}
   Sends the configuration data as a HTML table.
-  \item \begin{verbatim}
+  \item \begin{lstlisting}
 procedure target(s : GNAT.Sockets.Stream_Access;
                  h : web_common.params.Map;
                  p : web_common.params.Map);
-\end{verbatim}
+\end{lstlisting}
   Sends the parameters provided as a HTML table.
-  \item \begin{verbatim}
+  \item \begin{lstlisting}
 procedure html_reload_config(s : GNAT.Sockets.Stream_Access;
                              h : web_common.params.Map;
                              p : web_common.params.Map);
-\end{verbatim}
+\end{lstlisting}
   Request that the configuration file be reloaded.  This can be useful during development and debugging.
 \end{itemize}
 
 \subsection{\texttt{svg}}
 This package contains routines to generate SVG for internally generated items.  The generated SVG is written to the \texttt{Stream\_Access} that needs to be passed in.  The proper HTTP headers also need to be written.  The visible routines are:
 \begin{itemize}
-  \item \begin{verbatim}
+  \item \begin{lstlisting}
 procedure thermometer(s : GNAT.Sockets.Stream_Access;
                       h : web_common.params.Map;
                       p : web_common.params.Map);
-\end{verbatim}
+\end{lstlisting}
   Send SVG code to display a thermometer showing the value parameter.  This procedure handles getting and checking the parameters.  The following parameters are supported:
   \begin{itemize}
     \item \texttt{min} -- The minimum displayed value
@@ -187,11 +276,11 @@ procedure thermometer(s : GNAT.Sockets.Stream_Access;
     \item \texttt{value} -- The value to display.
   \end{itemize}
   The value is clamped to be between \texttt{min} and \texttt{max}.  If any exceptions occur in parsing the parameters or if \texttt{min} is greater than \texttt{max}, a red ``X'' will be presented as the graphic to indicate an error condition.  Using the default configuration, this could be requested as \texttt{/Thermometer?min=0\&max=100\&value=50}
-  \item \begin{verbatim}
+  \item \begin{lstlisting}
 procedure dial(s : GNAT.Sockets.Stream_Access;
                h : web_common.params.Map;
                p : web_common.params.Map);
-\end{verbatim}
+\end{lstlisting}
   Send SVG code to display a round dial with a pointer to the appropriate value. The following parameters are supported:
   \begin{itemize}
     \item \texttt{min} -- The minimum displayed value
@@ -204,19 +293,19 @@ procedure dial(s : GNAT.Sockets.Stream_Access;
 \subsection{\texttt{files}}
 This package consists of a spec and body and is used to support the serving of binary and text files.  The visible routines are:
 \begin{itemize}
-  \item \begin{verbatim}send_binary_with_headers(s : GNAT.Sockets.Stream_Access;
+  \item \begin{lstlisting}send_binary_with_headers(s : GNAT.Sockets.Stream_Access;
                          mime : String; name : String);
-            \end{verbatim}
+            \end{lstlisting}
   This procedure sends a binary file to the client with headers.  The file name is contained in the parameter \texttt{name} and the MIME type of the file is contained in the parameter \texttt{mime}.
 
-  \item \begin{verbatim}send_text_with_headers(s : GNAT.Sockets.Stream_Access;
+  \item \begin{lstlisting}send_text_with_headers(s : GNAT.Sockets.Stream_Access;
                        mime : String; name : String)
-  \end{verbatim}
+  \end{lstlisting}
   This procedure sends a text file to the client with headers.  The file name is contained in the parameter \texttt{name} and the MIME type of the file is contained in the parameter \texttt{mime}.
 
-  \item \begin{verbatim}send_text_without_headers(s : GNAT.Sockets.Stream_Access;
+  \item \begin{lstlisting}send_text_without_headers(s : GNAT.Sockets.Stream_Access;
                           name : String)
-  \end{verbatim}
+  \end{lstlisting}
   This procedure sends a text file to the client without headers.  The file name is contained in the parameter \texttt{name}.  No HTTP headers are sent.
 \end{itemize}
 
