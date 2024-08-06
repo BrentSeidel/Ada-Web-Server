@@ -1,6 +1,6 @@
-with "../BBS-Ada/bbs.gpr";
+with "config/bbs_webif_config.gpr";
 
-project bbs_web is
+project bbs_webif is
 
    for Languages use ("Ada");
    for Library_Name use "bbs_web";
@@ -15,5 +15,5 @@ project bbs_web is
       for switches ("Ada") use ("-g", "-gnateE", "-gnata");
    end compiler;
 
-end bbs_web;
+end bbs_webif;
 
