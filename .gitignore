@@ -8,6 +8,10 @@
 obj/
 */obj/*
 
+# lib directory
+lib/
+*/lib/
+
 # other Ada generated files
 *.stderr
 *.stdout
