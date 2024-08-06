@@ -1,0 +1,13 @@
+name = "bbs_webif"
+description = "Simple web server to provide an interface to embedded instruments"
+version = "0.1.0"
+
+authors = ["Brent Seidel"]
+maintainers = ["Brent Seidel <brentseidel@mac.com>"]
+maintainers-logins = ["BrentSeidel"]
+licenses = "GPL-3.0-or-later"
+website = "https://github.com/BrentSeidel/Ada-Web-Server"
+tags = ["http", "html", "embedded", "web"]
+
+[[depends-on]]
+bbs = "~0.1.0"
