@@ -1,6 +1,6 @@
 with Ada.Text_IO;
 with Ada.Text_IO.Unbounded_IO;
-package body bbs.html is
+package body BBS.web.html is
 
    --
    --  Generate a standard HTML heading.  This just has a title attribute
@@ -28,9 +28,9 @@ package body bbs.html is
       file : Ada.Text_IO.File_Type;
    begin
       begin
-         Ada.Text_IO.Open(File     => file,
-                          Mode     => Ada.Text_IO.In_File,
-                          Name     => name);
+         Ada.Text_IO.Open(File => file,
+                          Mode => Ada.Text_IO.In_File,
+                          Name => name);
       exception
          when others =>
             String'Write(s, "</body></html>" & CRLF);
@@ -43,4 +43,4 @@ package body bbs.html is
       Ada.Text_IO.Close(file);
    end html_end;
 
-end bbs.html;
+end BBS.web.html;

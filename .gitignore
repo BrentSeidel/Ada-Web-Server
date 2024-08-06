@@ -5,7 +5,8 @@
 *.ali
 
 # obj directory
-obj/*
+obj/
+*/obj/*
 
 # other Ada generated files
 *.stderr

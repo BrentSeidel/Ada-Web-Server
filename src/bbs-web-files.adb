@@ -2,8 +2,8 @@ with Ada.Strings.Unbounded;
 use type Ada.Strings.Unbounded.Unbounded_String;
 with Ada.Text_IO;
 with Ada.Text_IO.Unbounded_IO;
-with bbs.http;
-package body bbs.files is
+with BBS.web.http;
+package body BBS.web.files is
 
    --
    --  Send the contents of the specified binary type file out to the client
@@ -20,15 +20,15 @@ package body bbs.files is
       file : Char_IO.File_Type;
    begin
       begin
-         Char_IO.Open(File     => file,
-                          Mode     => Char_IO.In_File,
-                          Name     => name);
+         Char_IO.Open(File => file,
+                      Mode => Char_IO.In_File,
+                      Name => name);
       exception
          when others =>
-            bbs.http.internal_error(s, name);
+            BBS.web.http.internal_error(s, name);
             return;
       end;
-      bbs.http.ok(s, mime);
+      BBS.web.http.ok(s, mime);
       while not Char_IO.End_Of_File(file) loop
          Char_IO.Read(file, buff);
          Character'Write(s, buff);
@@ -47,15 +47,15 @@ package body bbs.files is
       file : Ada.Text_IO.File_Type;
    begin
       begin
-         Ada.Text_IO.Open(File     => file,
-                          Mode     => Ada.Text_IO.In_File,
-                          Name     => name);
+         Ada.Text_IO.Open(File => file,
+                          Mode => Ada.Text_IO.In_File,
+                          Name => name);
       exception
          when others =>
-            bbs.http.internal_error(s, name);
+            BBS.web.http.internal_error(s, name);
             return;
       end;
-      bbs.http.ok(s, mime);
+      BBS.web.http.ok(s, mime);
       while not Ada.Text_IO.End_Of_File(file) loop
          line := Ada.Text_IO.Unbounded_IO.Get_Line(file);
          String'Write(s, Ada.Strings.Unbounded.To_String(line) & CRLF);
@@ -72,9 +72,9 @@ package body bbs.files is
       file : Ada.Text_IO.File_Type;
    begin
       begin
-         Ada.Text_IO.Open(File     => file,
-                          Mode     => Ada.Text_IO.In_File,
-                          Name     => name);
+         Ada.Text_IO.Open(File => file,
+                          Mode => Ada.Text_IO.In_File,
+                          Name => name);
       exception
          when others =>
             return;
@@ -86,4 +86,4 @@ package body bbs.files is
       Ada.Text_IO.Close(file);
    end send_text_without_headers;
 
-end bbs.files;
+end BBS.web.files;

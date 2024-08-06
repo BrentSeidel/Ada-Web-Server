@@ -2,7 +2,7 @@ with Ada.Text_IO;
 with Ada.Text_IO.Unbounded_IO;
 with Ada.Exceptions;
 
-package body bbs.web_common is
+package body BBS.web is
    package ASU renames Ada.Strings.Unbounded; -- not the school
 
    --
@@ -64,17 +64,17 @@ package body bbs.web_common is
    --
    procedure load_directory(name : String; map : out dictionary.Map) is
       location : ASU.Unbounded_String;
-      file : Ada.Text_IO.File_Type;
-      line : ASU.Unbounded_String;
-      item : ASU.Unbounded_String;
-      mime : ASU.Unbounded_String;
+      file  : Ada.Text_IO.File_Type;
+      line  : ASU.Unbounded_String;
+      item  : ASU.Unbounded_String;
+      mime  : ASU.Unbounded_String;
       space : Natural;
-      el : element;
+      el    : element;
    begin
       map.Clear;
-      Ada.Text_IO.Open(File     => file,
-                       Mode     => Ada.Text_IO.In_File,
-                       Name     => name);
+      Ada.Text_IO.Open(File => file,
+                       Mode => Ada.Text_IO.In_File,
+                       Name => name);
       while not Ada.Text_IO.End_Of_File(file) loop
          line := Ada.Text_IO.Unbounded_IO.Get_Line(file);
          --
@@ -175,4 +175,4 @@ package body bbs.web_common is
       return ASU.To_String(t);
    end url_decode;
 
-end bbs.web_common;
+end BBS.web;

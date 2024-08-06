@@ -1,9 +1,8 @@
 with Ada.Strings.Unbounded;
 use type Ada.Strings.Unbounded.Unbounded_String;
 with GNAT.Sockets;
-with bbs.web_common;
 
-package bbs.web_server is
+package BBS.web.server is
    --
    --  This is the web server.  In initializes the network interface and enters
    --  an infinite loop processing requests.  The passed paraemters are:
@@ -15,7 +14,7 @@ package bbs.web_server is
    --       to shut the server down and exit.  It may also be turned into a task
    --       which may allow multiple servers to be run simultaneously.
    --
-   procedure server(internals : bbs.web_common.proc_tables.Map;
+   procedure server(internals : proc_tables.Map;
                     config_name : String;
                     port : GNAT.Sockets.Port_Type);
    --
@@ -26,15 +25,15 @@ package bbs.web_server is
    --
    task type request_handler is
       entry start(socket : GNAT.Sockets.Socket_Type;
-                  internals : bbs.web_common.proc_tables.Map;
-                  dir : bbs.web_common.dictionary.Map);
+                  internals : proc_tables.Map;
+                  dir : dictionary.Map);
       entry end_task;
    end request_handler;
 
    --
    -- Flag to control display of debug messages
    --
-   debug : bbs.web_common.protected_flag; -- Display requests.
+   debug : bbs.web.protected_flag; -- Display requests.
 
 private
    --
@@ -43,4 +42,4 @@ private
    --
    num_handlers : constant Natural := 10;
 
-end bbs.web_server;
+end BBS.web.server;

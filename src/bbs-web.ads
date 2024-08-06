@@ -9,7 +9,7 @@ with GNAT.Sockets;
 --
 --  This package contains assorted common constants and data for the web server.
 --
-package bbs.web_common is
+package BBS.web is
 
    --
    -- Define common exceptions.
@@ -105,7 +105,7 @@ package bbs.web_common is
    --  Common data.
    --
    CRLF : constant String := Ada.Characters.Latin_1.CR & Ada.Characters.Latin_1.LF;
-   server_header : constant String := "Server: Custom Ada 2012 Server" & CRLF;
+   server_header : constant String := "Server: Custom Ada 2024 Server" & CRLF;
    --
    --  A counter to keep track of the number of requests that have been received
    --
@@ -128,4 +128,4 @@ package bbs.web_common is
    --
    exit_flag : protected_flag;
 
-end bbs.web_common;
+end BBS.web;

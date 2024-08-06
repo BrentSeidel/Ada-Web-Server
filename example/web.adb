@@ -1,14 +1,14 @@
 with Ada.Text_IO;
 with Ada.Exceptions;
 with GNAT.Sockets;
-with bbs.svg;
-with bbs.internal;
-with bbs.http;
-with bbs.web_server;
-with bbs.web_common;
+with BBS.web.svg;
+with BBS.web.internal;
+with BBS.web.http;
+with BBS.web.server;
+with BBS.web;
 
 procedure web is
-   internal_map : bbs.web_common.proc_tables.Map;
+   internal_map : BBS.web.proc_tables.Map;
    --
    --  Build the map for internal procedure calls.  The key strings must match
    --  the identifications in the configuration file.  The generated map is
@@ -21,22 +21,22 @@ procedure web is
       --  Customization goes here to add any internally routines
       --  to generate responses.
       --
-      internal_map.Insert("thermometer", bbs.svg.thermometer'Access);
-      internal_map.Insert("dial", bbs.svg.dial'Access);
-      internal_map.Insert("target", bbs.internal.target'Access);
-      internal_map.Insert("reload", bbs.internal.html_reload_config'Access);
-      internal_map.Insert("counter", bbs.internal.xml_count'Access);
-      internal_map.Insert("raise", BBS.internal.html_raise'Access);
-      internal_map.Insert("exit", BBS.internal.html_set_exit'Access);
+      internal_map.Insert("thermometer", BBS.web.svg.thermometer'Access);
+      internal_map.Insert("dial", BBS.web.svg.dial'Access);
+      internal_map.Insert("target", BBS.web.internal.target'Access);
+      internal_map.Insert("reload", BBS.web.internal.html_reload_config'Access);
+      internal_map.Insert("counter", BBS.web.internal.xml_count'Access);
+      internal_map.Insert("raise", BBS.web.internal.html_raise'Access);
+      internal_map.Insert("exit", BBS.web.internal.html_set_exit'Access);
    end;
 
 begin
    --
    -- Set debugging flags to appropriate values.
    --
-   bbs.web_server.debug.set;
-   bbs.http.debug_req.set;
-   bbs.http.debug_head.clear;
+   BBS.web.server.debug.set;
+   BBS.web.http.debug_req.set;
+   BBS.web.http.debug_head.clear;
    --
    -- Build the map for internal routines.
    --
@@ -44,7 +44,7 @@ begin
    --
    -- Start the web server.  This does not return normally.
    --
-   bbs.web_server.server(internal_map, "config.txt", 31415);
+   BBS.web.server.server(internal_map, "config.txt", 31415);
    --
    --  This is used to cause a file not found exception for testing purposes.
    --  Comment out the line above this one and uncomment this one to test.

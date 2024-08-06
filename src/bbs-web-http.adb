@@ -3,7 +3,7 @@ with Ada.Text_IO;
 with Ada.Streams;
 use type Ada.Streams.Stream_Element_Offset;
 
-package body bbs.http is
+package body BBS.web.http is
    package ASU renames Ada.Strings.Unbounded; -- not the school
 
    --
@@ -21,14 +21,14 @@ package body bbs.http is
    --  Return code 200 OK for OPTIONS reqest cases
    --
    procedure options_ok(s : GNAT.Sockets.Stream_Access; item : String;
-                        dir : bbs.web_common.dictionary.Map) is
+                        dir : dictionary.Map) is
    begin
       String'Write(s, "HTTP/1.0 200 OK" & CRLF);
       if item = "*" then
          String'Write(s, "Allow: OPTIONS, GET, POST" & CRLF);
       elsif dir.Contains(item) then
          declare
-            el : constant bbs.web_common.element := dir.Element(item);
+            el : constant element := dir.Element(item);
             mime : constant String := ASU.To_String(el.mime);
          begin
             if mime = "internal" then
@@ -129,7 +129,7 @@ package body bbs.http is
          loop
             GNAT.Sockets.Receive_Socket(s, elem, last);
             if last = 0 then
-               raise bbs.web_common.closed_by_peer;
+               raise closed_by_peer;
             end if;
             c := Character'Val(elem(1));
             str := str & c;
@@ -137,7 +137,7 @@ package body bbs.http is
          end loop;
          GNAT.Sockets.Receive_Socket(s, elem, last);
          if last = 0 then
-            raise bbs.web_common.closed_by_peer;
+            raise closed_by_peer;
          end if;
          c := Character'Val(elem(1));
          str := str & c;
@@ -161,7 +161,7 @@ package body bbs.http is
       for i in Natural range 1 .. len loop
          GNAT.Sockets.Receive_Socket(s, elem, last);
          if last = 0 then
-            raise bbs.web_common.closed_by_peer;
+            raise closed_by_peer;
          end if;
          c := Character'Val(elem(1));
          str := str & c;
@@ -171,13 +171,13 @@ package body bbs.http is
    --
    --  Read the headers from the request..
    --
-   procedure read_headers(s : GNAT.Sockets.Stream_Access;
-                          sock : GNAT.Sockets.Socket_Type;
-                          method : out request_type;
-                          item : out ASU.Unbounded_String;
-                          headers : in out bbs.web_common.params.Map;
-                          params : in out bbs.web_common.params.Map;
-                          dir : bbs.web_common.dictionary.Map) is
+   procedure read_headers(s       : GNAT.Sockets.Stream_Access;
+                          sock    : GNAT.Sockets.Socket_Type;
+                          method  : out request_type;
+                          item    : out ASU.Unbounded_String;
+                          headers : in out params.Map;
+                          args    : in out params.Map;
+                          dir     : dictionary.Map) is
       param_string : ASU.Unbounded_String := ASU.Null_Unbounded_String;
       length : Natural;
       line  : ASU.Unbounded_String;
@@ -186,7 +186,7 @@ package body bbs.http is
       temp2 : ASU.Unbounded_String;
       index : Natural;
    begin
-      params.Clear;
+      args.Clear;
       headers.Clear;
       --
       --  The first line contains the request.  Parse it out.
@@ -305,15 +305,15 @@ package body bbs.http is
             index := ASU.Index(temp1, "=");
             declare
                key : constant String := ASU.To_String(ASU.Head(temp1, index - 1));
-               value : constant String := bbs.web_common.url_decode(ASU.To_String(
-                                                       ASU.Tail(temp1,
-                                                          ASU.Length(temp1) - index)));
+               value : constant String := url_decode(ASU.To_String(
+                                                     ASU.Tail(temp1,
+                                                     ASU.Length(temp1) - index)));
             begin
-               params.Insert(Key      => key,
-                             New_Item => value);
+               args.Insert(Key      => key,
+                           New_Item => value);
             end;
          end loop;
       end if;
    end read_headers;
 
-end bbs.http;
+end BBS.web.http;
