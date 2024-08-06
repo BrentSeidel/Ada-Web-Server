@@ -45,7 +45,7 @@ package BBS.web.http is
      with Global => (Input => (CRLF, server_header));
    --
    -- Return code 501 NOT IMPLEMENTED for a request for an internally generated
-   -- item that is not yet implemented..
+   -- item that is not yet implemented.
    --
    procedure not_implemented_int(s : GNAT.Sockets.Stream_Access; item: String)
      with Global => (Input => (CRLF, server_header));

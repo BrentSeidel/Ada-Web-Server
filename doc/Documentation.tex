@@ -43,6 +43,7 @@
 \newcommand{\constant}[1]{\emph{\texttt{#1}}}
 \newcommand{\keyword}[1]{\texttt{#1}}
 \newcommand{\datatype}[1]{\texttt{#1}}
+\newcommand{\filename}[1]{\texttt{#1}}
 \newcommand{\cli}[1]{\texttt{#1}}
 \newcommand{\uvec}[1]{\textnormal{\bfseries{#1}}}
 \newcommand{\comment}[1]{{\color{red}{#1}}}
@@ -123,7 +124,7 @@ This collection is currently available on GitHub at \url{https://github.com/Bren
 \end{itemize}
 
 \subsection{Other Libraries}
-This library depends on the root package \package{BBS} available at \url{https://github.com/BrentSeidel/BBS-Ada}.  Packages external to this project are marked with an asterisk.
+This library depends on the root package \package{BBS} available at \url{https://github.com/BrentSeidel/BBS-Ada} and through alire via ``\keyword{alr get bbs}''.   Packages external to this project are marked with an asterisk.
 \begin{itemize}
   \item \package{BBS.web.files}
   \item \package{BBS.web.html}
@@ -134,9 +135,9 @@ This library depends on the root package \package{BBS} available at \url{https:/
 
 %========================================================
 \chapter{Usage Instructions}
-This is a library of routines intended to be used by some program.  To use these in your program, edit your *\keyword{.gpr} file to include a line to \keyword{with} the path to \keyword{web\_lib.gpr}.  Then in your Ada code \keyword{with} in the package(s) you need and use the routines.
+This is a library of routines intended to be used by some program.  To use these in your program, edit your \filename{*.gpr} file to include a line to \keyword{with} the path to \keyword{web\_lib.gpr}.  Then in your Ada code \keyword{with} in the package(s) you need and use the routines.
 
-To use the example web server, go to the \keyword{example} directory and build the \keyword{web.gpr} project file.
+To use the example web server, go to the \filename{example} directory and build the \keyword{web.gpr} project file in the \keyword{example} directory..
 
 %========================================================
 \chapter{API Description}
@@ -194,133 +195,242 @@ procedure server(internals : proc_tables.Map;
 This procedure should be called after all other initialization is done.  It starts the web server and does not return.  At some point, it may get turned into a task so that other processing in the main task can proceed along with it.
 
 \subsection{\package{BBS.web.html}}
-This package contains routines to support the generation of HTML.  The visible routines are:
+This package contains routines to support the generation of HTML.
+
+Generate a simple HTML heading with the specified title.
+\begin{lstlisting}
+procedure html_head(s : GNAT.Sockets.Stream_Access; title : String)
+\end{lstlisting}
 \begin{itemize}
-  \item \function{html\_head(s : GNAT.Sockets.Stream\_Access; title : String)}\\
-  Generate a simple HTML heading with the specified title.
-  \item \function{html\_head(s : GNAT.Sockets.Stream\_Access; title : String; style : String)}\\
-  Generate a simple HTML heading with the specified title and style sheet.
-  \item \function{html\_end(s : GNAT.Sockets.Stream\_Access; name : String)}\\
-  Generate an ending for an HTML item using the file specified in \keyword{name}.
+  \item \keyword{s} - The stream to write output to.
+  \item \keyword{title} - The page title.
+\end{itemize}
+Generate a simple HTML heading with the specified title and style sheet.
+\begin{lstlisting}
+procedure html_head(s : GNAT.Sockets.Stream_Access;
+                    title : String; style : String)
+\end{lstlisting}
+\begin{itemize}
+  \item \keyword{s} - The stream to write output to.
+  \item \keyword{title} - The page title.
+  \item \keyword{style} - The URL for the style sheet to use.
+\end{itemize}
+Generate an ending for an HTML item using the file specified in \keyword{name}.  This can be used to have a common footer for pages.
+\begin{lstlisting}
+procedure html_end(s : GNAT.Sockets.Stream_Access; name: String)
+\end{lstlisting}
+\begin{itemize}
+  \item \keyword{s} - The stream to write output to.
+  \item \keyword{name} - The name of the file containing the page ending.
 \end{itemize}
 
 \subsection{\package{BBS.web.http}}
-This package contains routines to support HTTP.  Currently GET and POST methods are supported with some minimal support for the OPTIONS method.  GET methods are supported for all items while POST methods are only supported for internally generated items.  If a file or an internally generated item with no parameters is being served, any supplied parameters are just ignored. Some of these routines are intended for use by user code and some are not.  The visible routines are:
+This package contains routines to support HTTP.  Currently GET and POST methods are supported with some minimal support for the OPTIONS method.  GET methods are supported for all items while POST methods are only supported for internally generated items.  If a file or an internally generated item with no parameters is being served, any supplied parameters are just ignored. Some of these routines are intended for use by user code and some are not.
+
+Return code 200 OK for normal cases.
+\begin{lstlisting}
+procedure ok(s : GNAT.Sockets.Stream_Access; txt: String)
+\end{lstlisting}
 \begin{itemize}
-  \item \verb|ok(s : GNAT.Sockets.Stream_Access; txt: String)|\\
-  Return code 200 OK for normal cases.
-  \item \verb|not_found(s : GNAT.Sockets.Stream_Access; item: String)|\\
-  Return code 404 NOT FOUND for when the requested item is not in the directory.
-  \item \verb|internal_error(s : GNAT.Sockets.Stream_Access; file: String)|\\
-  Return code 500 INTERNAL SERVER ERROR generally when unable to open the file for the specified item.  This means an item has been added to \texttt{config.txt} without adding the file to the system.
-  \item \verb|not_implemented_int(s : GNAT.Sockets.Stream_Access; item: String)|\\
-  Return code 501 NOT IMPLEMENTED for a request for an internally generated item that is not yet implemented.
-  \item \function{read\_headers(s : GNAT.Sockets.Stream\_Access;\\
-             method : out request\_type;\\
-             item : out Ada.Strings.Unbounded.Unbounded\_String;\\
-             params : in out params.Map)}\\
-   The \function{read\_headers} procedure handles both GET, POST, and OPTIONS request and returns any passed parameters.  Returned values will be the requested item in \keyword{item} and a dictionary containing the parameters in \keyword{params}.  If there are no parameters, the dictionary will be empty.  This routine is called by the web server to read the headers of the HTTP request.  By the time any user code is called, the headers have already been read.
+  \item \keyword{s} - The stream to write output to.
+  \item \keyword{txt} - Used as the MIME type for the page.
+\end{itemize}
+Return code 404 NOT FOUND for when the requested item is not in the directory.
+\begin{lstlisting}
+procedure not_found(s : GNAT.Sockets.Stream_Access; item: String)
+\end{lstlisting}
+\begin{itemize}
+  \item \keyword{s} - The stream to write output to.
+  \item \keyword{item} - The URL of the item that cannot be found.
+\end{itemize}
+Return code 500 INTERNAL SERVER ERROR generally when unable to open the file for the specified item.  This means an item has been added to \filename{config.txt} without adding the file to the system.
+\begin{lstlisting}
+procedure internal_error(s : GNAT.Sockets.Stream_Access; file: String)
+\end{lstlisting}
+\begin{itemize}
+  \item \keyword{s} - The stream to write output to.
+  \item \keyword{file} - The name of the file that caused the problem.
+\end{itemize}
+Return code 501 NOT IMPLEMENTED for a request for an internally generated item that is not yet implemented.
+\begin{lstlisting}
+procedure not_implemented_int(s : GNAT.Sockets.Stream_Access; item: String)
+\end{lstlisting}
+\begin{itemize}
+  \item \keyword{s} - The stream to write output to.
+  \item \keyword{item} - The URL of the item that is not implemented.
+\end{itemize}
+The \function{read\_headers} procedure handles both GET, POST, and OPTIONS request and returns any passed parameters.  Returned values will be the requested item in \keyword{item} and a dictionary containing the parameters in \keyword{params}.  If there are no parameters, the dictionary will be empty.  This routine is called by the web server to read the headers of the HTTP request.  By the time any user code is called, the headers have already been read.
+\begin{lstlisting}
+procedure read_headers(s       : GNAT.Sockets.Stream_Access;
+                       sock    : GNAT.Sockets.Socket_Type;
+                       method  : out request_type;
+                       item    : out Ada.Strings.Unbounded.Unbounded_String;
+                       headers : in out params.Map;
+                       args    : in out params.Map;
+                       dir     : dictionary.Map)
+\end{lstlisting}
+\begin{itemize}
+  \item \keyword{s} - The stream to read from.
+  \item \keyword{sock} - The socket to read from.
+  \item \keyword{method} - The requested method.
+  \item \keyword{item} - The requested item.
+  \item \keyword{headers} - A dictionary containing the rest of the request headers and values.
+  \item \keyword{args} - A dictionary containing the request arguments and values.
+  \item \keyword{dir} - A dictionary containing options to be returned for an OPTIONS request.
 \end{itemize}
 
 \subsection{\package{BBS.web.internal}}
-This package contains routines to generate HTML or XML for internally generated items.  The generated HTML or XML is written to the \datatype{Stream\_Access} that needs to be passed in.  The proper HTTP headers also need to be written.  The routines in this package are only referenced (if referenced at all) from the internal items map.  They do provide some examples of how to generate items.  The internal routines can have access to parameters passed in the GET or POST request as well as the HTTP headers.  If no parameters were passed, the parameters dictionary is empty.  The visible routines are:
-\begin{itemize}
-  \item \begin{lstlisting}
+This package contains routines to generate HTML or XML for internally generated items.  The generated HTML or XML is written to the \datatype{Stream\_Access} that needs to be passed in.  The proper HTTP headers also need to be written.  The routines in this package are only referenced (if referenced at all) from the internal items map.  They do provide some examples of how to generate items.  The internal routines can have access to parameters passed in the GET or POST request as well as the HTTP headers.  If no parameters were passed, the parameters dictionary is empty.
+
+Sends the count of transactions as an xml message.
+\begin{lstlisting}
 procedure xml_count(s : GNAT.Sockets.Stream_Access;
                     h : params.Map;
                     p : params.Map);
 \end{lstlisting}
-  Sends the count of transactions as an xml message.
-  \item \begin{lstlisting}
+\begin{itemize}
+  \item \keyword{s} - The stream to write output to.
+  \item \keyword{h} - The dictionary containing the header items.
+  \item \keyword{p} - The dictionary containing the argument items.
+\end{itemize}
+Sends the configuration data as a HTML table.
+\begin{lstlisting}
 procedure html_show_config(s : GNAT.Sockets.Stream_Access;
                            h : params.Map;
                            p : params.Map);
 \end{lstlisting}
-  Sends the configuration data as a HTML table.
-  \item \begin{lstlisting}
+\begin{itemize}
+  \item \keyword{s} - The stream to write output to.
+  \item \keyword{h} - The dictionary containing the header items.
+  \item \keyword{p} - The dictionary containing the argument items.
+\end{itemize}
+Sends the parameters provided as a HTML table.
+\begin{lstlisting}
 procedure target(s : GNAT.Sockets.Stream_Access;
                  h : params.Map;
                  p : params.Map);
 \end{lstlisting}
-  Sends the parameters provided as a HTML table.
-  \item \begin{lstlisting}
+\begin{itemize}
+  \item \keyword{s} - The stream to write output to.
+  \item \keyword{h} - The dictionary containing the header items.
+  \item \keyword{p} - The dictionary containing the argument items.
+\end{itemize}
+Request that the configuration file be reloaded.  This can be useful during development and debugging.
+\begin{lstlisting}
 procedure html_reload_config(s : GNAT.Sockets.Stream_Access;
                              h : params.Map;
                              p : params.Map);
 \end{lstlisting}
-  Request that the configuration file be reloaded.  This can be useful during development and debugging.
+\begin{itemize}
+  \item \keyword{s} - The stream to write output to.
+  \item \keyword{h} - The dictionary containing the header items.
+  \item \keyword{p} - The dictionary containing the argument items.
 \end{itemize}
 
 \subsection{\package{BBS.web.svg}}
-This package contains routines to generate SVG for internally generated items.  The generated SVG is written to the \datatype{Stream\_Access} that needs to be passed in.  The proper HTTP headers also need to be written.  The visible routines are:
-\begin{itemize}
-  \item \begin{lstlisting}
+This package contains routines to generate SVG for internally generated items.  The generated SVG is written to the \datatype{Stream\_Access} that needs to be passed in.  The proper HTTP headers also need to be written.
+
+Send SVG code to display a thermometer showing the value parameter.  This procedure handles getting and checking the parameters.  The value is clamped to be between \keyword{min} and \keyword{max}.  If any exceptions occur in parsing the parameters or if \keyword{min} is greater than \keyword{max}, a red ``X'' will be presented as the graphic to indicate an error condition.  Using the default configuration, an example request is \url{/Thermometer?min=0&max=100&value=50}
+\begin{lstlisting}
 procedure thermometer(s : GNAT.Sockets.Stream_Access;
                       h : params.Map;
                       p : params.Map);
 \end{lstlisting}
-  Send SVG code to display a thermometer showing the value parameter.  This procedure handles getting and checking the parameters.  The following parameters are supported:
-  \begin{itemize}
-    \item \texttt{min} -- The minimum displayed value
-    \item \texttt{max} -- The maximum displayed value
-    \item \texttt{value} -- The value to display.
-  \end{itemize}
-  The value is clamped to be between \keyword{min} and \keyword{max}.  If any exceptions occur in parsing the parameters or if \keyword{min} is greater than \keyword{max}, a red ``X'' will be presented as the graphic to indicate an error condition.  Using the default configuration, this could be requested as \texttt{/Thermometer?min=0\&max=100\&value=50}
-  \item \begin{lstlisting}
+\begin{itemize}
+  \item \keyword{s} - The stream to write output to.
+  \item \keyword{h} - The dictionary containing the header items.
+  \item \keyword{p} - The dictionary containing the argument items.
+\end{itemize}
+The following parameters are supported:
+\begin{itemize}
+  \item \keyword{min} -- The minimum displayed value
+  \item \keyword{max} -- The maximum displayed value
+  \item \keyword{value} -- The value to display.
+\end{itemize}
+Send SVG code to display a round dial with a pointer to the appropriate value.  The value is clamped to be between \keyword{min} and \keyword{max}.  If any exceptions occur in parsing the parameters or if \keyword{min} is greater than \keyword{max}, a red ``X'' will be presented as the graphic to indicate an error condition.  Using the default configuration, an example request is \url{/Dial?min=0&max=100&value=50}
+\begin{lstlisting}
 procedure dial(s : GNAT.Sockets.Stream_Access;
                h : params.Map;
                p : params.Map);
 \end{lstlisting}
-  Send SVG code to display a round dial with a pointer to the appropriate value. The following parameters are supported:
-  \begin{itemize}
-    \item \texttt{min} -- The minimum displayed value
-    \item \texttt{max} -- The maximum displayed value
-    \item \texttt{value} -- The value to display.
-  \end{itemize}
-  The value is clamped to be between \keyword{min} and \keyword{max}.  If any exceptions occur in parsing the parameters or if \keyword{min} is greater than \keyword{max}, a red ``X'' will be presented as the graphic to indicate an error condition.  Using the default configuration, this could be requested as \keyword{/Dial?min=0\&max=100\&value=50}
+\begin{itemize}
+  \item \keyword{s} - The stream to write output to.
+  \item \keyword{h} - The dictionary containing the header items.
+  \item \keyword{p} - The dictionary containing the argument items.
 \end{itemize}
+  The following parameters are supported:
+  \begin{itemize}
+    \item \keyword{min} -- The minimum displayed value
+    \item \keyword{max} -- The maximum displayed value
+    \item \keyword{value} -- The value to display.
+  \end{itemize}
 
 \subsection{\package{BBS.web.files}}
 This package consists of a spec and body and is used to support the serving of binary and text files.  The visible routines are:
+
+This procedure sends a binary file to the client with headers.  The file name is contained in the parameter \keyword{name} and the MIME type of the file is contained in the parameter \keyword{mime}.
+\begin{lstlisting}
+procedure send_binary_with_headers(s : GNAT.Sockets.Stream_Access;
+                         mime : String; name : String)
+\end{lstlisting}
 \begin{itemize}
-  \item \function{send\_binary\_with\_headers(s : GNAT.Sockets.Stream\_Access;\\
-                         mime : String; name : String)}\\
-  This procedure sends a binary file to the client with headers.  The file name is contained in the parameter \keyword{name} and the MIME type of the file is contained in the parameter \keyword{mime}.
-
-  \item \function{send\_text\_with\_headers(s : GNAT.Sockets.Stream\_Access;\\
-                       mime : String; name : String)}\\
-  This procedure sends a text file to the client with headers.  The file name is contained in the parameter \keyword{name} and the MIME type of the file is contained in the parameter \keyword{mime}.
-
-  \item \function{send\_text\_without\_headers(s : GNAT.Sockets.Stream\_Access;\\
-                          name : String)}\\
-  This procedure sends a text file to the client without headers.  The file name is contained in the parameter \keyword{name}.  No HTTP headers are sent.
+  \item \keyword{s} - The stream to write output to.
+  \item \keyword{name} - The name of the binary file to send.
+  \item \keyword{mime} - The MIME type of the file.
 \end{itemize}
+This procedure sends a text file to the client with headers.  The file name is contained in the parameter \keyword{name} and the MIME type of the file is contained in the parameter \keyword{mime}.
+\begin{lstlisting}
+procedure send_text_with_headers(s : GNAT.Sockets.Stream_Access;
+                       mime : String; name : String)
+\end{lstlisting}
+\begin{itemize}
+  \item \keyword{s} - The stream to write output to.
+  \item \keyword{name} - The name of the binary file to send.
+  \item \keyword{mime} - The MIME type of the file.
+\end{itemize}
+This procedure sends a text file to the client without headers.  The file name is contained in the parameter \keyword{name}.  No HTTP headers are sent.
+\begin{lstlisting}
+procedure send_text_without_headers(s : GNAT.Sockets.Stream_Access;
+                          name : String)
+\end{lstlisting}
+\begin{itemize}
+  \item \keyword{s} - The stream to write output to.
+  \item \keyword{name} - The name of the binary file to send.
+\end{itemize}
+
+\section{Modifications}
+To add or change internally generated items, the code will need to be modified and recompiled.  In both cases, the first place to look in the software is the \function{build\_internal\_map} procedure in the \filename{web.adb} example file.
+
+\subsection{Modifications to Existing Items}
+First, identify the routine to modify by looking at the \function{build\_internal\_map} procedure.  Then the appropriate files can be edited and the routine located.  Once the routine is located, any necessary modifications can be made.
+
+\subsection{Adding New Items}
+The very first thing is to decide what you can your item to do.  The existing software has examples of routines that generate HTML, XML, and SVG.  These can be used as models.  These are contained in the \package{BBS.web.internal} (for HTML and XML) and \package{BBS.web.svg} (for SVG) packages.  If you need to interface with other hardware or software, it will probably be best to add new packages for these interfaces.
+
+%========================================================
+\chapter{Example Program}
+%--------------------------------------------------------------------------------------------------
+\section{\package{web.adb}}
+This is an example program that uses the web server library.  It initializes the internal items table and starts the web server.  If other initializations are needed, they could be added or called from here.
+
 
 \section{Configuration}
 Generally before being used, the web server needs to be configured.  An example configuration is included and may be modified as needed.
 
-\subsection{Configuration File}
-The primary means of configuration is the \texttt{config.txt} file in the repository root.  This file is used to translate from the URL requested to the actual page served.  Both external files and internally generated responses are supported.
+\section{Configuration File}
+The primary means of configuration is the \filename{config.txt} file in the repository root.  This file is used to translate from the URL requested to the actual page served.  Both external files and internally generated responses are supported.  Note that only URLs specified in this file will be served.  Anything else will get a 404 NOT FOUND error.
 
 The format of the configuration file is fairly simple.  A line that has a pound sign, ``\#'' (octothorp) as the first character is a comment.  Non comment lines consist of three fields separated by a single space.
 \begin{itemize}
   \item The first field is the requested URL minus the server specification.  Due to the nature of URLs, the first character will always be a slash, ``/''.  The web server uses a simple dictionary data structure for the URLs so the structure is technically flat.  However, any sort of hierarchical structure can be simulated.
   \item The second field identifies the item to be served.  It may be a file or it may be an arbitrary string to identify an internally generated item.  Files served are passed unchanged and both text and binary files are supported.
-  \item The third field identifies the MIME type of the file being served.  If the third field is ``\texttt{internal}'', the item being served will be generated internally.  The value of the second field is used to select the proper internal routine to call.
+  \item The third field identifies the MIME type of the file being served.  If the third field is ``\keyword{internal}'', the item being served will be generated internally.  The value of the second field is used to select the proper internal routine to call.
 \end{itemize}
 
 \subsection{Modifying the Software}
-To change the port used by the server, specify a different value when calling \texttt{web\_server.server}.
+To change the port used by the server, specify a different value when calling \function{BBS.web.server.server}.
 
-To change the number of tasks (threads) available for serving, change the \texttt{num\_handlers} constant in \texttt{web\_server.ads}.  The default value is 10, which should be adequate.  If memory is tight, it can be reduced. If higher performance is needed, this number can be increased.
+To change the number of tasks (threads) available for serving, change the \keyword{num\_handlers} constant in \package{BBS.web.server}.  The default value is 10, which should be adequate.  If memory is tight, it can be reduced. If higher performance is needed, this number can be increased.
 
-\section{Modifications}
-To add or change internally generated items, the code will need to be modified and recompiled.  In both cases, the first place to look in the software is the \texttt{build\_internal\_map} procedure in the \texttt{web\_server.adb} file.
-
-\subsection{Modifications to Existing Items}
-First, identify the routine to modify by looking at the \texttt{build\_internal\_map} procedure.  Then the appropriate files can be edited and the routine located.  Once the routine is located, any necessary modifications can be made.
-
-\subsection{Adding New Items}
-The very first thing is to decide what you can your item to do.  The existing software has examples of routines that generate HTML, XML, and SVG.  These can be used as models.  These are contained in the \texttt{internal} (for HTML and XML) and \texttt{svg} (for SVG) packages.  If you need to interface with other hardware or software, it will probably be best to add new packages for these interfaces.
 
 \end{document}
