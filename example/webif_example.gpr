@@ -1,7 +1,6 @@
-with "../../BBS-Ada/bbs.gpr";
-with "../bbs_web.gpr";
+with "config/webif_example_config.gpr";
 
-project Web is
+project webif_example is
 
    for Source_Dirs use (".");
    for Object_Dir use "obj";
@@ -28,5 +27,5 @@ project Web is
       for Switches ("ada") use ("-r");
    end Binder;
 
-end Web;
+end webif_example;
 

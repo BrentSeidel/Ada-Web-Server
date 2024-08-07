@@ -4,6 +4,10 @@ It should be able to run on small Linux based computers such as a BeagleBone Bla
 or Raspberry Pi.  Unless you are only interested in serving a few static pages,
 the code will require modifications for your application.
 
+[![Alire](https://img.shields.io/endpoint?url=https://alire.ada.dev/badges/bbs_webif.json)]
+(https://alire.ada.dev/crates/bbs_webif.html)
+
+
 ## Customization
 ### Ada
 The primary Ada files for customization are web_server.adb, internal.ads, and

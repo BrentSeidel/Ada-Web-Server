@@ -1,0 +1,32 @@
+with "../../BBS-Ada/bbs.gpr";
+with "../bbs_webif_noalr.gpr";
+
+project webif_example_noalr is
+
+   for Source_Dirs use (".");
+   for Object_Dir use "obj";
+   for Main use ("web.adb");
+   for Exec_Dir use ".";
+
+   package Pretty_Printer is
+      for Switches ("ada") use ("-i2");
+   end Pretty_Printer;
+
+   package Builder is
+      for Switches ("ada") use ("-s", "-j4", "-g");
+   end Builder;
+
+   package Compiler is
+      for Switches ("ada") use ("-gnatVa", "-g", "-gnato", "-fstack-check", "-gnat12");
+   end Compiler;
+
+   package Linker is
+      for Switches ("ada") use ("-g", "--coverage");
+   end Linker;
+
+   package Binder is
+      for Switches ("ada") use ("-r");
+   end Binder;
+
+end webif_example_noalr;
+
