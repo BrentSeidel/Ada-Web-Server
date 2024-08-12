@@ -25,7 +25,7 @@ with BBS.web.http;
 with BBS.web.server;
 with BBS.web;
 
-procedure web is
+procedure webif_example is
    internal_map : BBS.web.proc_tables.Map;
    --
    --  Build the map for internal procedure calls.  The key strings must match
@@ -72,4 +72,4 @@ exception
    when err: Others =>
       Ada.Text_IO.Put_Line("Unhandled exception occured during operation.");
       Ada.Text_IO.Put_Line(Ada.Exceptions.Exception_Information(err));
-end web;
+end webif_example;

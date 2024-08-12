@@ -24,7 +24,7 @@ config/*
 */config/*
 
 main
-web
+webif_example
 
 # LaTeX files
 *.log

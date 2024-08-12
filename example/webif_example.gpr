@@ -4,7 +4,7 @@ project webif_example is
 
    for Source_Dirs use (".");
    for Object_Dir use "obj";
-   for Main use ("web.adb");
+   for Main use ("webif_example.adb");
    for Exec_Dir use ".";
 
    package Pretty_Printer is
