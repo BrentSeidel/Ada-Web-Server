@@ -17,6 +17,12 @@ lib/
 *.stdout
 *.cswi
 
+# Alire directories
+alire/*
+config/*
+*/alire/*
+*/config/*
+
 main
 web
 
